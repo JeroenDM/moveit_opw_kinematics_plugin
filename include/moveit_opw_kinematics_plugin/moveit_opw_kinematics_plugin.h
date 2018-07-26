@@ -1,5 +1,5 @@
-#ifndef OPW_KINEMATICS_PLUGIN_H
-#define OPW_KINEMATICS_PLUGIN_H
+#ifndef MOVEIT_OPW_KINEMATICS_PLUGIN_H
+#define MOVEIT_OPW_KINEMATICS_PLUGIN_H
 
 // MoveIt!
 #include <moveit/kinematics_base/kinematics_base.h>
@@ -9,9 +9,9 @@
 // OPW kinematics
 #include "opw_kinematics/opw_kinematics.h"
 
-namespace opw_kinematics_plugin
+namespace moveit_opw_kinematics_plugin
 {
-class OPWKinematicsPlugin : public kinematics::KinematicsBase
+class MoveItOPWKinematicsPlugin : public kinematics::KinematicsBase
 {
 public:
   /**
@@ -40,6 +40,6 @@ private:
        */
   bool setOPWParameters(opw_kinematics::Parameters<double> &parameters);
 };
-} // namespace opw_kinematics_plugin
+} // namespace moveit_opw_kinematics_plugin
 
-#endif /* OPW_KINEMATICS_PLUGIN_H */
+#endif /* MOVEIT_OPW_KINEMATICS_PLUGIN_H */

@@ -1,5 +1,5 @@
 <library path="lib/libmoveit_opw_kinematics_plugin">
-  <class name="moveit_opw_kinematics_plugin/OPWKinematicsPlugin" type="moveit_opw_kinematics_plugin::OPWKinematicsPlugin" base_class_type="kinematics::KinematicsBase">
+  <class name="moveit_opw_kinematics_plugin/MoveItOPWKinematicsPlugin" type="moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin" base_class_type="kinematics::KinematicsBase">
     <description>
       Analytic kinematics for industrial robots
        based on package opw_kinematics.
