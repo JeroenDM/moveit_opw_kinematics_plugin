@@ -48,7 +48,7 @@ include_directories(
 
 # Declare a C++ library
 add_library(${MOVEIT_LIB_NAME}
-  src/opw_kinematics_plugin.cpp
+  src/moveit_opw_kinematics_plugin.cpp
 )
 
 target_link_libraries(${MOVEIT_LIB_NAME}
@@ -110,7 +110,7 @@ install(DIRECTORY include/${PROJECT_NAME}/
 
 install(
   FILES
-    opw_kinematics_plugin_description.xml
+    moveit_opw_kinematics_plugin_description.xml
   DESTINATION
     ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
