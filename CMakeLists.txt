@@ -15,8 +15,8 @@ find_package(catkin REQUIRED COMPONENTS
 )
 set(MOVEIT_LIB_NAME moveit_opw_kinematics_plugin)
 
-## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
+# System dependencies are found with CMake's conventions
+find_package(Boost REQUIRED COMPONENTS filesystem)
 
 ###################################
 ## catkin specific configuration ##
@@ -133,3 +133,13 @@ install(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+# add a ros node to run the kuka_kr6_test
+# I don't know a better way to get a clean test output in the terminal
+add_executable(${PROJECT_NAME}_utest test/utest.cpp)
+set_target_properties(${PROJECT_NAME}_utest PROPERTIES OUTPUT_NAME utest PREFIX "")
+target_link_libraries(${PROJECT_NAME}_utest
+ gtest
+ ${catkin_LIBRARIES}
+ ${MOVEIT_LIB_NAME}
+)
