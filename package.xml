@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>opw_kinematics_plugin</name>
+  <name>moveit_opw_kinematics_plugin</name>
   <version>0.0.0</version>
-  <description>The opw_kinematics_plugin package</description>
+  <description>MoveIt! KinematicsBase plugin for industrial robots.</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
-  <maintainer email="jeroendm@todo.todo">jeroendm</maintainer>
+  <maintainer email="jeroen.demaeyer@kuleuven.be">Jeroen De Maeyer</maintainer>
 
 
   <!-- One license tag required, multiple allowed, one license per tag -->
