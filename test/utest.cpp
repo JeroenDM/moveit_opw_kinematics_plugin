@@ -1,11 +1,41 @@
 #include "moveit_opw_kinematics_plugin/moveit_opw_kinematics_plugin.h"
 
+#include <Eigen/Dense>
 #include <fstream>
 #include <gtest/gtest.h>
 #include <string>
 
 #include <moveit/robot_model/robot_model.h>
 #include <urdf_parser/urdf_parser.h>
+#include <eigen_conversions/eigen_msg.h>
+
+const double TOLERANCE = 1e-6; // absolute tolerance for EXPECT_NEAR checks
+
+template <typename T>
+using Transform = Eigen::Transform<T, 3, Eigen::Affine>;
+
+/** @brief Compare every element of two eigen affine3 poses.
+ */
+template <typename T>
+void comparePoses(const Transform<T> & Ta, const Transform<T> & Tb)
+{
+  using Matrix = Eigen::Matrix<T, 3, 3>;
+  using Vector = Eigen::Matrix<T, 3, 1>;
+
+  Matrix Ra = Ta.rotation(), Rb = Tb.rotation();
+  for (int i = 0; i < Ra.rows(); ++i)
+  {
+    for (int j = 0; j < Ra.cols(); ++j)
+    {
+      EXPECT_NEAR(Ra(i, j), Rb(i, j), TOLERANCE);
+    }
+  }
+
+  Vector pa = Ta.translation(), pb = Tb.translation();
+  EXPECT_NEAR(pa[0], pb[0], TOLERANCE);
+  EXPECT_NEAR(pa[1], pb[1], TOLERANCE);
+  EXPECT_NEAR(pa[2], pb[2], TOLERANCE);
+}
 
 const std::string urdf_path = "src/moveit_opw_kinematics_plugin/test/kuka_kr6r700sixx.urdf";
 const std::string srdf_path = "src/moveit_opw_kinematics_plugin/test/kuka_kr6r700sixx.srdf";
@@ -50,6 +80,37 @@ TEST_F(LoadRobot, InitOK)
   ASSERT_EQ(srdf_model_->getName(), "kuka_kr6r700sixx");
 }
 
+TEST_F(LoadRobot, initialize)
+{
+  moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin plugin(robot_model_);
+}
+
+TEST_F(LoadRobot, positionFK)
+{
+  using Eigen::AngleAxisd;
+  using Eigen::Translation3d;
+  using Eigen::Vector3d;
+
+  moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin plugin(robot_model_);
+
+  std::vector<std::string> link_names;
+  std::vector<double> joint_angles = {0, 0, 0, 0, 0, 0};
+  std::vector<geometry_msgs::Pose> poses;
+
+  plugin.getPositionFK(link_names, joint_angles, poses);
+
+  Eigen::Affine3d pose_actual, pose_desired;
+  tf::poseMsgToEigen(poses[0], pose_actual);
+
+  // position and orientation taking into account the offset of the second joint
+  // px = a1 + c2 + c3 + c4
+  // py = 0
+  // pz = c1 + a2
+  pose_desired = Translation3d(0.785, 0, 0.435) * AngleAxisd(M_PI_2, Vector3d::UnitY());
+
+  comparePoses(pose_actual, pose_desired);
+
+}
 
 int main(int argc, char **argv)
 {
