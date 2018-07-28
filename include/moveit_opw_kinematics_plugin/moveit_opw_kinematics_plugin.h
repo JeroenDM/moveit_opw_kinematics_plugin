@@ -21,6 +21,9 @@
 
 namespace moveit_opw_kinematics_plugin
 {
+
+using kinematics::KinematicsResult;
+
 /**
  * @brief Specific implementation of kinematics using the ros package opw_kinematics for industrial robots.
  */
@@ -44,9 +47,32 @@ public:
    * @return True if a valid solution was found, false otherwise
    */
   virtual bool
-  getPositionIK(const geometry_msgs::Pose &ik_pose, const std::vector<double> &ik_seed_state,
-                std::vector<double> &solution, moveit_msgs::MoveItErrorCodes &error_code,
+  getPositionIK(const geometry_msgs::Pose &ik_pose,
+                const std::vector<double> &ik_seed_state,
+                std::vector<double> &solution,
+                moveit_msgs::MoveItErrorCodes &error_code,
                 const kinematics::KinematicsQueryOptions &options = kinematics::KinematicsQueryOptions()) const;
+
+  /**
+ * @brief Given a desired pose of the end-effector, compute the set joint angles solutions that are able to reach it.
+ *
+ * This is a default implementation that returns only one solution and so its result is equivalent to calling
+ * 'getPositionIK(...)' with a zero initialized seed.
+ *
+ * @param ik_poses  The desired pose of each tip link
+ * @param ik_seed_state an initial guess solution for the inverse kinematics
+ * @param solutions A vector of vectors where each entry is a valid joint solution
+ * @param result A struct that reports the results of the query
+ * @param options An option struct which contains the type of redundancy discretization used. This default
+ *                implementation only supports the KinematicSearches::NO_DISCRETIZATION method; requesting any
+ *                other will result in failure.
+ * @return True if a valid set of solutions was found, false otherwise.
+ */
+  virtual bool getPositionIK(const std::vector<geometry_msgs::Pose> &ik_poses,
+                             const std::vector<double> &ik_seed_state,
+                             std::vector<std::vector<double>> &solutions,
+                             KinematicsResult &result,
+                             const kinematics::KinematicsQueryOptions &options) const;
 
   /**
    * @brief Given a desired pose of the end-effector, search for the joint angles required to reach it.
@@ -62,8 +88,11 @@ public:
    * @return True if a valid solution was found, false otherwise
    */
   virtual bool
-  searchPositionIK(const geometry_msgs::Pose &ik_pose, const std::vector<double> &ik_seed_state, double timeout,
-                   std::vector<double> &solution, moveit_msgs::MoveItErrorCodes &error_code,
+  searchPositionIK(const geometry_msgs::Pose &ik_pose,
+                   const std::vector<double> &ik_seed_state,
+                   double timeout,
+                   std::vector<double> &solution,
+                   moveit_msgs::MoveItErrorCodes &error_code,
                    const kinematics::KinematicsQueryOptions &options = kinematics::KinematicsQueryOptions()) const;
 
   /**
@@ -82,8 +111,11 @@ public:
    * @return True if a valid solution was found, false otherwise
    */
   virtual bool
-  searchPositionIK(const geometry_msgs::Pose &ik_pose, const std::vector<double> &ik_seed_state, double timeout,
-                   const std::vector<double> &consistency_limits, std::vector<double> &solution,
+  searchPositionIK(const geometry_msgs::Pose &ik_pose,
+                   const std::vector<double> &ik_seed_state,
+                   double timeout,
+                   const std::vector<double> &consistency_limits,
+                   std::vector<double> &solution,
                    moveit_msgs::MoveItErrorCodes &error_code,
                    const kinematics::KinematicsQueryOptions &options = kinematics::KinematicsQueryOptions()) const;
 
@@ -102,8 +134,12 @@ public:
    * @return True if a valid solution was found, false otherwise
    */
   virtual bool searchPositionIK(
-      const geometry_msgs::Pose &ik_pose, const std::vector<double> &ik_seed_state, double timeout,
-      std::vector<double> &solution, const IKCallbackFn &solution_callback, moveit_msgs::MoveItErrorCodes &error_code,
+      const geometry_msgs::Pose &ik_pose,
+      const std::vector<double> &ik_seed_state,
+      double timeout,
+      std::vector<double> &solution,
+      const IKCallbackFn &solution_callback,
+      moveit_msgs::MoveItErrorCodes &error_code,
       const kinematics::KinematicsQueryOptions &options = kinematics::KinematicsQueryOptions()) const;
 
   /**
@@ -123,9 +159,13 @@ public:
    * @return True if a valid solution was found, false otherwise
    */
   virtual bool
-  searchPositionIK(const geometry_msgs::Pose &ik_pose, const std::vector<double> &ik_seed_state, double timeout,
-                   const std::vector<double> &consistency_limits, std::vector<double> &solution,
-                   const IKCallbackFn &solution_callback, moveit_msgs::MoveItErrorCodes &error_code,
+  searchPositionIK(const geometry_msgs::Pose &ik_pose,
+                   const std::vector<double> &ik_seed_state,
+                   double timeout,
+                   const std::vector<double> &consistency_limits,
+                   std::vector<double> &solution,
+                   const IKCallbackFn &solution_callback,
+                   moveit_msgs::MoveItErrorCodes &error_code,
                    const kinematics::KinematicsQueryOptions &options = kinematics::KinematicsQueryOptions()) const;
 
   /**
@@ -135,7 +175,8 @@ public:
    * @param poses The resultant set of poses (in the frame returned by getBaseFrame())
    * @return True if a valid solution was found, false otherwise
    */
-  virtual bool getPositionFK(const std::vector<std::string> &link_names, const std::vector<double> &joint_angles,
+  virtual bool getPositionFK(const std::vector<std::string> &link_names,
+                             const std::vector<double> &joint_angles,
                              std::vector<geometry_msgs::Pose> &poses) const;
 
   /**
@@ -149,8 +190,10 @@ public:
    * @param search_discretization The discretization of the search when the solver steps through the redundancy
    * @return True if initialization was successful, false otherwise
    */
-  virtual bool initialize(const std::string &robot_description, const std::string &group_name,
-                          const std::string &base_frame, const std::string &tip_frame,
+  virtual bool initialize(const std::string &robot_description,
+                          const std::string &group_name,
+                          const std::string &base_frame,
+                          const std::string &tip_frame,
                           double search_discretization);
 
   /**
@@ -171,7 +214,23 @@ public:
   }
 
 private:
+  /** @brief Get parameters needed for the ik solver from parameter server.
+   * The parameters must be specified in the kinematics.yaml file.
+   * @return True if all parameters are succesfully loaded
+   */
   bool setOPWParameters();
+
+  // use fucntions from descartes_owp_model for inverse kinematics calculations
+  bool getAllIK(const Eigen::Affine3d &pose, std::vector<std::vector<double>> &joint_poses) const;
+  bool getIK(const Eigen::Affine3d &pose, const std::vector<double> &seed_state, std::vector<double> &joint_pose) const;
+
+  /** @brief Compute the 'joint distance' between two poses.
+   */
+  double distance(const std::vector<double> &a, const std::vector<double> &b) const;
+
+  /** @brief Compute the index of the closest joint pose in 'candidates' from 'target'.
+   */
+ std::size_t closestJointPose(const std::vector<double> &target, const std::vector<std::vector<double>> &candidates) const;
 
   std::string robot_description_;
   std::string group_name_;
@@ -191,25 +250,7 @@ private:
 
   opw_kinematics::Parameters<double> opw_parameters_;
 };
+
 } // namespace moveit_opw_kinematics_plugin
 
 #endif /* MOVEIT_OPW_KINEMATICS_PLUGIN_H */
-
-// /**
-//  * @brief Given a desired pose of the end-effector, compute the set joint angles solutions that are able to reach it.
-//  *
-//  * This is a default implementation that returns only one solution and so its result is equivalent to calling
-//  * 'getPositionIK(...)' with a zero initialized seed.
-//  *
-//  * @param ik_poses  The desired pose of each tip link
-//  * @param ik_seed_state an initial guess solution for the inverse kinematics
-//  * @param solutions A vector of vectors where each entry is a valid joint solution
-//  * @param result A struct that reports the results of the query
-//  * @param options An option struct which contains the type of redundancy discretization used. This default
-//  *                implementation only supports the KinematicSearches::NO_DISCRETIZATION method; requesting any
-//  *                other will result in failure.
-//  * @return True if a valid set of solutions was found, false otherwise.
-//  */
-// virtual bool getPositionIK(const std::vector<geometry_msgs::Pose>& ik_poses, const std::vector<double>& ik_seed_state,
-//                            std::vector<std::vector<double> >& solutions, KinematicsResult& result,
-//                            const kinematics::KinematicsQueryOptions& options) const;

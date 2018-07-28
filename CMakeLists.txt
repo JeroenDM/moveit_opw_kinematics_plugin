@@ -143,3 +143,10 @@ target_link_libraries(${PROJECT_NAME}_utest
  ${catkin_LIBRARIES}
  ${MOVEIT_LIB_NAME}
 )
+
+add_executable(${PROJECT_NAME}_test_load_parameters test/test_load_parameters.cpp)
+set_target_properties(${PROJECT_NAME}_test_load_parameters PROPERTIES OUTPUT_NAME test_load_parameters PREFIX "")
+target_link_libraries(${PROJECT_NAME}_test_load_parameters
+ ${catkin_LIBRARIES}
+ ${MOVEIT_LIB_NAME}
+)

@@ -1,0 +1,8 @@
+<launch>
+
+<rosparam command="load" file="$(find moveit_opw_kinematics_plugin)/test/kinematics.yaml" />
+
+<node pkg="moveit_opw_kinematics_plugin" type="test_load_parameters" name="test_load_parameters" output="screen">
+</node>
+
+</launch>

@@ -3,11 +3,14 @@
 #include <Eigen/Dense>
 #include <fstream>
 #include <gtest/gtest.h>
+#include <map>
 #include <string>
 
+#include <ros/ros.h>
 #include <moveit/robot_model/robot_model.h>
 #include <urdf_parser/urdf_parser.h>
 #include <eigen_conversions/eigen_msg.h>
+#include <moveit_msgs/MoveItErrorCodes.h>
 
 const double TOLERANCE = 1e-6; // absolute tolerance for EXPECT_NEAR checks
 
@@ -112,10 +115,63 @@ TEST_F(LoadRobot, positionFK)
 
 }
 
+TEST_F(LoadRobot, singleSolutionIK)
+{
+  moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin plugin(robot_model_);
+
+  std::vector<std::string> link_names;
+  const std::vector<double> joint_angles = {0, 0.1, 0.2, 0.3, 0.4, 0.5};
+  std::vector<geometry_msgs::Pose> poses;
+
+  plugin.getPositionFK(link_names, joint_angles, poses);
+  const geometry_msgs::Pose pose_in = poses[0];
+
+  // Eigen::Affine3d pose_actual, pose_desired;
+  // tf::poseMsgToEigen(poses[0], pose_actual);
+
+  std::vector<double> solution;
+  moveit_msgs::MoveItErrorCodes error_code;
+  bool res = plugin.getPositionIK(pose_in, joint_angles, solution, error_code);
+  EXPECT_TRUE(res);
+
+  for (int i = 0; i < solution.size(); ++i)
+  {
+    EXPECT_NEAR(solution[i], joint_angles[i], TOLERANCE);
+  }
+}
+
+// TEST_F(LoadRobot, allSolutionsIK)
+// {
+//   moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin plugin(robot_model_);
+
+//   std::vector<std::string> link_names;
+//   const std::vector<double> joint_angles = {0, 0.1, 0.2, 0.3, 0.4, 0.5};
+//   const std::vector<geometry_msgs::Pose> poses;
+
+//   plugin.getPositionFK(link_names, joint_angles, poses);
+//   const geometry_msgs::Pose pose_in = poses[0];
+
+//   // Eigen::Affine3d pose_actual, pose_desired;
+//   // tf::poseMsgToEigen(poses[0], pose_actual);
+
+//   std::vector<std::vector<double>> solutions;
+//   kinematics::KinematicsResult result;
+//   bool res = plugin.getPositionIK(poses, joint_angles, solutions, result);
+//   EXPECT_TRUE(res);
+
+//   for (int i = 0; i < solutions[0].size(); ++i)
+//   {
+//     EXPECT_NEAR(solutions[0][i], joint_angles[i], TOLERANCE);
+//   }
+// }
+
 int main(int argc, char **argv)
 {
+    ros::init(argc, argv, "utest");
     testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    bool res = RUN_ALL_TESTS();
+    ros::shutdown();
+    return res;
 }
 
 
