@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   moveit_ros_planning
   roscpp
   opw_kinematics
+  pluginlib
 )
 set(MOVEIT_LIB_NAME moveit_opw_kinematics_plugin)
 

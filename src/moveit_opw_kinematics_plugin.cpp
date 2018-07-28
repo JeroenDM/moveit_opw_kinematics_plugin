@@ -17,9 +17,6 @@
 #include "opw_kinematics/opw_kinematics.h"
 #include "opw_kinematics/opw_utilities.h"
 
-// register MoveItOPWKinematicsPlugin as a KinematicsBase implementation
-// Note: I have no idea what I'm doing here...
-CLASS_LOADER_REGISTER_CLASS(moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin, kinematics::KinematicsBase)
 
 namespace moveit_opw_kinematics_plugin
 {
@@ -250,3 +247,7 @@ std::size_t MoveItOPWKinematicsPlugin::closestJointPose( const std::vector<doubl
 }
 
 } // namespace moveit_opw_kinematics_plugin
+
+// register MoveItOPWKinematicsPlugin as a KinematicsBase implementation
+#include <pluginlib/class_list_macros.h>
+PLUGINLIB_EXPORT_CLASS(moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin, kinematics::KinematicsBase);
