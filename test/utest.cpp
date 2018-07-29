@@ -85,7 +85,8 @@ TEST_F(LoadRobot, InitOK)
 
 TEST_F(LoadRobot, initialize)
 {
-  moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin plugin(robot_model_);
+  moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin plugin;
+  plugin.initialize(robot_model_);
 }
 
 TEST_F(LoadRobot, positionFK)
@@ -94,7 +95,8 @@ TEST_F(LoadRobot, positionFK)
   using Eigen::Translation3d;
   using Eigen::Vector3d;
 
-  moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin plugin(robot_model_);
+  moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin plugin;
+  plugin.initialize(robot_model_);
 
   std::vector<std::string> link_names;
   std::vector<double> joint_angles = {0, 0, 0, 0, 0, 0};
@@ -117,7 +119,8 @@ TEST_F(LoadRobot, positionFK)
 
 TEST_F(LoadRobot, singleSolutionIK)
 {
-  moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin plugin(robot_model_);
+  moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin plugin;
+  plugin.initialize(robot_model_);
 
   std::vector<std::string> link_names;
   const std::vector<double> joint_angles = {0, 0.1, 0.2, 0.3, 0.4, 0.5};

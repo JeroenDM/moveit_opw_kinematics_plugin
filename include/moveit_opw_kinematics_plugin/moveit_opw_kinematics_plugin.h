@@ -34,7 +34,7 @@ public:
   static const double DEFAULT_TIMEOUT;               /* = 1.0 */
 
   MoveItOPWKinematicsPlugin() = default;
-  MoveItOPWKinematicsPlugin(robot_model::RobotModelPtr model);
+  //MoveItOPWKinematicsPlugin(robot_model::RobotModelPtr model);
 
   /**
    * @brief Given a desired pose of the end-effector, compute the joint angles to reach it
@@ -195,6 +195,8 @@ public:
                           const std::string &base_frame,
                           const std::string &tip_frame,
                           double search_discretization);
+  
+  bool initialize(robot_model::RobotModelPtr model);
 
   /**
    * @brief  Return all the joint names in the order they are used internally
@@ -237,13 +239,15 @@ private:
   std::string base_frame_;
   std::vector<std::string> tip_frames_;
 
+  std::vector<std::string> joint_names_;
+  std::vector<std::string> link_names_;
+
   double default_timeout_;
   std::vector<unsigned int> redundant_joint_indices_;
   std::map<int, double> redundant_joint_discretization_;
 
   robot_model::RobotModelPtr robot_model_;
   robot_model::JointModelGroup *joint_model_group_;
-
   robot_state::RobotStatePtr robot_state_;
 
   int num_possible_redundant_joints_;

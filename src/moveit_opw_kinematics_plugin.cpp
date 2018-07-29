@@ -17,6 +17,12 @@
 #include "opw_kinematics/opw_kinematics.h"
 #include "opw_kinematics/opw_utilities.h"
 
+// URDF, SRDF
+#include <urdf_model/model.h>
+#include <srdfdom/model.h>
+
+#include <moveit/rdf_loader/rdf_loader.h>
+
 
 namespace moveit_opw_kinematics_plugin
 {
@@ -96,6 +102,8 @@ bool MoveItOPWKinematicsPlugin::getPositionFK(const std::vector<std::string> &li
   }
 }
 
+/** @brief default virutal initialization function from KinematicsBase
+ */
 bool MoveItOPWKinematicsPlugin::initialize(const std::string &robot_description,
                                            const std::string &group_name,
                                            const std::string &base_frame,
@@ -103,35 +111,44 @@ bool MoveItOPWKinematicsPlugin::initialize(const std::string &robot_description,
                                            double search_discretization)
 {
   //setValues(robot_description, group_name, base_frame, tip_frame, search_discretization);
-  group_name_ = group_name;
-  setOPWParameters();
-  // robot_model_loader::RobotModelLoader robot_model_loader(robot_description_);
-  // robot_model_ = robot_model_loader.getModel();
-  return true;
+
+  ROS_INFO_STREAM("Robot description reading from: " << robot_description);
+  
+  robot_model_loader::RobotModelLoader robot_model_loader(robot_description);
+
+  ROS_INFO_STREAM("Robot model loaded.");
+
+  return initialize(robot_model_loader.getModel());
+}
+
+/** @brief initialization function only taking a robot model.
+ * This makes testing easier.
+ */
+bool MoveItOPWKinematicsPlugin::initialize(robot_model::RobotModelPtr model)
+{
+  ROS_INFO_STREAM("Robot name : " << model->getName());
+
+  robot_model_ = model;
+  group_name_ = model->getJointModelGroupNames()[0];
+  ROS_INFO_STREAM("Planning group: " << group_name_);
+
+  joint_model_group_ = robot_model_->getJointModelGroup(group_name_);
+
+   link_names_ = joint_model_group_->getLinkModelNames();
+   joint_names_ = joint_model_group_->getJointModelNames();
+
+  if (!setOPWParameters())
+    ROS_ERROR("OPW parameters could not be initialized.");
 }
 
 const std::vector<std::string> &MoveItOPWKinematicsPlugin::getJointNames() const
 {
-  return robot_model_->getJointModelNames();
+  return joint_names_;
 }
 
 const std::vector<std::string> &MoveItOPWKinematicsPlugin::getLinkNames() const
 {
-  return robot_model_->getLinkModelNames();
-}
-
-MoveItOPWKinematicsPlugin::MoveItOPWKinematicsPlugin(robot_model::RobotModelPtr model)
-{
-  ROS_INFO_STREAM("Robot name : " << model->getName());
-  ROS_INFO_STREAM("Planning group: " << model->getJointModelGroupNames()[0]);
-
-  robot_model_ = model;
-  const std::vector<std::string> link_names = getLinkNames();
-  //setValues("not_used", model->getJointModelGroupNames()[0], link_names[0], link_names[7], 0.1);
-  group_name_ = model->getJointModelGroupNames()[0];
-
-  if (!setOPWParameters())
-    ROS_ERROR("OPW parameters could not be initialized.");
+  return link_names_;
 }
 
 bool MoveItOPWKinematicsPlugin::setOPWParameters()
