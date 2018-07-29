@@ -139,6 +139,8 @@ bool MoveItOPWKinematicsPlugin::initialize(robot_model::RobotModelPtr model)
 
   if (!setOPWParameters())
     ROS_ERROR("OPW parameters could not be initialized.");
+  
+  return true;
 }
 
 const std::vector<std::string> &MoveItOPWKinematicsPlugin::getJointNames() const
