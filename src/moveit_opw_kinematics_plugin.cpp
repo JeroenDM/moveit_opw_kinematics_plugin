@@ -396,6 +396,9 @@ bool MoveItOPWKinematicsPlugin::getAllIK(const Eigen::Affine3d &pose, std::vecto
       std::copy(sol, sol + 6, tmp.data());
       // if (isValid(tmp))
       // {
+      tmp[0] = -tmp[0];
+      tmp[3] = -tmp[3];
+      tmp[5] = -tmp[5];
       joint_poses.push_back(tmp);
       // }
     }
