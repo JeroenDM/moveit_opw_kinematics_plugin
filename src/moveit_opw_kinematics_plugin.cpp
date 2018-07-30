@@ -360,6 +360,14 @@ bool MoveItOPWKinematicsPlugin::setOPWParameters()
     return false;
   }
 
+
+  std::vector<int> joint_sign_corrections, dummy3;
+  if (!lookupParam(prefix + "kinematics_solver_joint_sign_corrections", joint_sign_corrections, dummy3))
+  {
+    ROS_ERROR_STREAM("Failed to load joint offsets for ik solver.");
+    return false;
+  }
+
   opw_parameters_.a1 = geometric_parameters["a1"];
   opw_parameters_.a2 = geometric_parameters["a2"];
   opw_parameters_.b = geometric_parameters["b"];
@@ -370,9 +378,10 @@ bool MoveItOPWKinematicsPlugin::setOPWParameters()
   for (std::size_t i = 0; i < joint_offsets.size(); ++i)
   {
     opw_parameters_.offsets[i] = joint_offsets[i];
+    opw_parameters_.sign_corrections[i] = joint_sign_corrections[i];
   }
 
-  ROS_INFO_STREAM("Loaded parameters for ik solver:\ngeometric: " << opw_parameters_);
+  ROS_INFO_STREAM("Loaded parameters for ik solver:\n" << opw_parameters_);
 
   return true;
 }
@@ -426,9 +435,6 @@ bool MoveItOPWKinematicsPlugin::getAllIK(const Eigen::Affine3d &pose, std::vecto
       std::copy(sol, sol + 6, tmp.data());
       // if (isValid(tmp))
       // {
-      tmp[0] = -tmp[0];
-      tmp[3] = -tmp[3];
-      tmp[5] = -tmp[5];
       joint_poses.push_back(tmp);
       // }
     }
