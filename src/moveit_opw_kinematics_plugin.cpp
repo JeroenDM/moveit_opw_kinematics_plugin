@@ -1,156 +1,309 @@
-#include "moveit_opw_kinematics_plugin/moveit_opw_kinematics_plugin.h"
-
-#include <eigen_conversions/eigen_msg.h>
+#include <moveit_opw_kinematics_plugin/moveit_opw_kinematics_plugin.h>
 #include <class_loader/class_loader.hpp>
-#include <map>
-#include <ros/ros.h>
-#include <vector>
 
-// MoveIt!
-#include <moveit/kinematics_base/kinematics_base.h>
-#include <moveit/robot_model/robot_model.h>
-#include <moveit/robot_model_loader/robot_model_loader.h>
-#include <moveit/robot_state/robot_state.h>
+// URDF, SRDF
+#include <urdf_model/model.h>
+#include <srdfdom/model.h>
+
+#include <moveit/robot_state/conversions.h>
+#include <moveit/rdf_loader/rdf_loader.h>
+
+// Eigen
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+#include <eigen_conversions/eigen_msg.h>
 
 // OPW kinematics
 #include "opw_kinematics/opw_io.h"
 #include "opw_kinematics/opw_kinematics.h"
 #include "opw_kinematics/opw_utilities.h"
 
-// URDF, SRDF
-#include <urdf_model/model.h>
-#include <srdfdom/model.h>
-
-#include <moveit/rdf_loader/rdf_loader.h>
-
+// register OPWKinematics as a KinematicsBase implementation
+CLASS_LOADER_REGISTER_CLASS(moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin, kinematics::KinematicsBase)
 
 namespace moveit_opw_kinematics_plugin
 {
-using kinematics::KinematicsResult;
-bool MoveItOPWKinematicsPlugin::getPositionIK(const geometry_msgs::Pose &ik_pose,
-                                              const std::vector<double> &ik_seed_state,
-                                              std::vector<double> &solution,
-                                              moveit_msgs::MoveItErrorCodes &error_code,
-                                              const kinematics::KinematicsQueryOptions &options) const
+MoveItOPWKinematicsPlugin::MoveItOPWKinematicsPlugin() : active_(false)
 {
-  Eigen::Affine3d pose;
-  tf::poseMsgToEigen(ik_pose, pose);
-  return getIK(pose, ik_seed_state, solution);
 }
 
-// NOte, I don't know if this is the functions I should use for returning all the solutions
-bool MoveItOPWKinematicsPlugin::getPositionIK(const std::vector<geometry_msgs::Pose> &ik_poses,
-                                              const std::vector<double> &ik_seed_state,
-                                              std::vector<std::vector<double>> &solutions,
-                                              KinematicsResult &result,
-                                              const kinematics::KinematicsQueryOptions &options) const
+bool MoveItOPWKinematicsPlugin::initialize(const std::string& robot_description, const std::string& group_name,
+                                     const std::string& base_frame, const std::vector<std::string>& tip_frames,
+                                     double search_discretization)
 {
-  if (ik_poses.size() > 1 || ik_poses.size() == 0)
+  bool debug = false;
+
+  ROS_INFO_STREAM_NAMED("opw", "MoveItOPWKinematicsPlugin initializing");
+
+  setValues(robot_description, group_name, base_frame, tip_frames, search_discretization);
+
+  rdf_loader::RDFLoader rdf_loader(robot_description_);
+  const srdf::ModelSharedPtr& srdf = rdf_loader.getSRDF();
+  const urdf::ModelInterfaceSharedPtr& urdf_model = rdf_loader.getURDF();
+
+  if (!urdf_model || !srdf)
   {
-    ROS_ERROR_STREAM("Only a single ik pose supported at the moment.");
+    ROS_ERROR_NAMED("opw", "URDF and SRDF must be loaded for SRV kinematics solver to work.");  // TODO: is this true?
     return false;
   }
-  Eigen::Affine3d pose;
-  tf::poseMsgToEigen(ik_poses[0], pose);
-  return getAllIK(pose, solutions);
-}
 
-bool MoveItOPWKinematicsPlugin::searchPositionIK(const geometry_msgs::Pose &ik_pose, const std::vector<double> &ik_seed_state, double timeout,
-                                                 std::vector<double> &solution, moveit_msgs::MoveItErrorCodes &error_code,
-                                                 const kinematics::KinematicsQueryOptions &options) const
-{
-  return getPositionIK(ik_pose, ik_seed_state, solution, error_code);
-}
+  robot_model_.reset(new robot_model::RobotModel(urdf_model, srdf));
 
-bool MoveItOPWKinematicsPlugin::searchPositionIK(const geometry_msgs::Pose &ik_pose, const std::vector<double> &ik_seed_state, double timeout,
-                                                 const std::vector<double> &consistency_limits, std::vector<double> &solution,
-                                                 moveit_msgs::MoveItErrorCodes &error_code,
-                                                 const kinematics::KinematicsQueryOptions &options) const
-{
-  return getPositionIK(ik_pose, ik_seed_state, solution, error_code);
-}
+  joint_model_group_ = robot_model_->getJointModelGroup(group_name);
+  if (!joint_model_group_)
+    return false;
 
-bool MoveItOPWKinematicsPlugin::searchPositionIK(
-    const geometry_msgs::Pose &ik_pose, const std::vector<double> &ik_seed_state, double timeout,
-    std::vector<double> &solution, const IKCallbackFn &solution_callback, moveit_msgs::MoveItErrorCodes &error_code,
-    const kinematics::KinematicsQueryOptions &options) const
-{
-  return getPositionIK(ik_pose, ik_seed_state, solution, error_code);
-}
-
-bool MoveItOPWKinematicsPlugin::searchPositionIK(const geometry_msgs::Pose &ik_pose, const std::vector<double> &ik_seed_state, double timeout,
-                                                 const std::vector<double> &consistency_limits, std::vector<double> &solution,
-                                                 const IKCallbackFn &solution_callback, moveit_msgs::MoveItErrorCodes &error_code,
-                                                 const kinematics::KinematicsQueryOptions &options) const
-{
-  return getPositionIK(ik_pose, ik_seed_state, solution, error_code);
-}
-
-bool MoveItOPWKinematicsPlugin::getPositionFK(const std::vector<std::string> &link_names, const std::vector<double> &joint_angles,
-                                              std::vector<geometry_msgs::Pose> &poses) const
-{
-  if (joint_angles.size() == 6)
+  if (debug)
   {
-    poses.resize(1);
-    tf::poseEigenToMsg(opw_kinematics::forward(opw_parameters_, &joint_angles[0]), poses[0]);
-    return true;
+    std::cout << std::endl << "Joint Model Variable Names: ------------------------------------------- " << std::endl;
+    const std::vector<std::string> jm_names = joint_model_group_->getVariableNames();
+    std::copy(jm_names.begin(), jm_names.end(), std::ostream_iterator<std::string>(std::cout, "\n"));
+    std::cout << std::endl;
   }
-  else
+
+  // Get the dimension of the planning group
+  dimension_ = joint_model_group_->getVariableCount();
+  ROS_INFO_STREAM_NAMED("opw", "Dimension planning group '"
+                                   << group_name << "': " << dimension_
+                                   << ". Active Joints Models: " << joint_model_group_->getActiveJointModels().size()
+                                   << ". Mimic Joint Models: " << joint_model_group_->getMimicJointModels().size());
+
+  // Copy joint names
+  for (std::size_t i = 0; i < joint_model_group_->getJointModels().size(); ++i)
   {
-    ROS_DEBUG("The input joint_angles for getPositionFk have the wrong size.");
+    ik_group_info_.joint_names.push_back(joint_model_group_->getJointModelNames()[i]);
+  }
+
+  if (debug)
+  {
+    ROS_ERROR_STREAM_NAMED("opw", "tip links available:");
+    std::copy(tip_frames_.begin(), tip_frames_.end(), std::ostream_iterator<std::string>(std::cout, "\n"));
+  }
+
+  // Make sure all the tip links are in the link_names vector
+  for (std::size_t i = 0; i < tip_frames_.size(); ++i)
+  {
+    if (!joint_model_group_->hasLinkModel(tip_frames_[i]))
+    {
+      ROS_ERROR_NAMED("opw", "Could not find tip name '%s' in joint group '%s'", tip_frames_[i].c_str(),
+                      group_name.c_str());
+      return false;
+    }
+    ik_group_info_.link_names.push_back(tip_frames_[i]);
+  }
+
+  // Choose what ROS service to send IK requests to
+  ROS_DEBUG_STREAM_NAMED("opw", "Looking for ROS service name on rosparam server with param: "
+                                    << "/kinematics_solver_service_name");
+  std::string ik_service_name;
+  lookupParam("kinematics_solver_service_name", ik_service_name, std::string("solve_ik"));
+
+  // Setup the joint state groups that we need
+  robot_state_.reset(new robot_state::RobotState(robot_model_));
+  robot_state_->setToDefaultValues();
+
+  // set geometric parameters for opw model
+  if(!setOPWParameters())
+  {
+    ROS_ERROR_STREAM_NAMED("opw", "Could not load opw parameters. Check kinematics.yaml.");
     return false;
   }
-}
 
-/** @brief default virutal initialization function from KinematicsBase
- */
-bool MoveItOPWKinematicsPlugin::initialize(const std::string &robot_description,
-                                           const std::string &group_name,
-                                           const std::string &base_frame,
-                                           const std::string &tip_frame,
-                                           double search_discretization)
-{
-  //setValues(robot_description, group_name, base_frame, tip_frame, search_discretization);
-
-  ROS_INFO_STREAM("Robot description reading from: " << robot_description);
-  
-  robot_model_loader::RobotModelLoader robot_model_loader(robot_description);
-
-  ROS_INFO_STREAM("Robot model loaded.");
-
-  return initialize(robot_model_loader.getModel());
-}
-
-/** @brief initialization function only taking a robot model.
- * This makes testing easier.
- */
-bool MoveItOPWKinematicsPlugin::initialize(robot_model::RobotModelPtr model)
-{
-  ROS_INFO_STREAM("Robot name : " << model->getName());
-
-  robot_model_ = model;
-  group_name_ = model->getJointModelGroupNames()[0];
-  ROS_INFO_STREAM("Planning group: " << group_name_);
-
-  joint_model_group_ = robot_model_->getJointModelGroup(group_name_);
-
-   link_names_ = joint_model_group_->getLinkModelNames();
-   joint_names_ = joint_model_group_->getJointModelNames();
-
-  if (!setOPWParameters())
-    ROS_ERROR("OPW parameters could not be initialized.");
-  
+  active_ = true;
+  ROS_DEBUG_NAMED("opw", "ROS service-based kinematics solver initialized");
   return true;
 }
 
-const std::vector<std::string> &MoveItOPWKinematicsPlugin::getJointNames() const
+bool MoveItOPWKinematicsPlugin::setRedundantJoints(const std::vector<unsigned int>& redundant_joints)
 {
-  return joint_names_;
+  if (num_possible_redundant_joints_ < 0)
+  {
+    ROS_ERROR_NAMED("srv", "This group cannot have redundant joints");
+    return false;
+  }
+  if (redundant_joints.size() > num_possible_redundant_joints_)
+  {
+    ROS_ERROR_NAMED("srv", "This group can only have %d redundant joints", num_possible_redundant_joints_);
+    return false;
+  }
+
+  return true;
 }
 
-const std::vector<std::string> &MoveItOPWKinematicsPlugin::getLinkNames() const
+bool MoveItOPWKinematicsPlugin::isRedundantJoint(unsigned int index) const
 {
-  return link_names_;
+  for (std::size_t j = 0; j < redundant_joint_indices_.size(); ++j)
+    if (redundant_joint_indices_[j] == index)
+      return true;
+  return false;
+}
+
+int MoveItOPWKinematicsPlugin::getJointIndex(const std::string& name) const
+{
+  for (unsigned int i = 0; i < ik_group_info_.joint_names.size(); i++)
+  {
+    if (ik_group_info_.joint_names[i] == name)
+      return i;
+  }
+  return -1;
+}
+
+bool MoveItOPWKinematicsPlugin::timedOut(const ros::WallTime& start_time, double duration) const
+{
+  return ((ros::WallTime::now() - start_time).toSec() >= duration);
+}
+
+bool MoveItOPWKinematicsPlugin::getPositionIK(const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state,
+                                        std::vector<double>& solution, moveit_msgs::MoveItErrorCodes& error_code,
+                                        const kinematics::KinematicsQueryOptions& options) const
+{
+  const IKCallbackFn solution_callback = 0;
+  std::vector<double> consistency_limits;
+
+  return searchPositionIK(ik_pose, ik_seed_state, default_timeout_, solution, solution_callback, error_code,
+                          consistency_limits, options);
+}
+
+bool MoveItOPWKinematicsPlugin::searchPositionIK(const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state,
+                                           double timeout, std::vector<double>& solution,
+                                           moveit_msgs::MoveItErrorCodes& error_code,
+                                           const kinematics::KinematicsQueryOptions& options) const
+{
+  const IKCallbackFn solution_callback = 0;
+  std::vector<double> consistency_limits;
+
+  return searchPositionIK(ik_pose, ik_seed_state, timeout, solution, solution_callback, error_code, consistency_limits,
+                          options);
+}
+
+bool MoveItOPWKinematicsPlugin::searchPositionIK(const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state,
+                                           double timeout, const std::vector<double>& consistency_limits,
+                                           std::vector<double>& solution, moveit_msgs::MoveItErrorCodes& error_code,
+                                           const kinematics::KinematicsQueryOptions& options) const
+{
+  const IKCallbackFn solution_callback = 0;
+  return searchPositionIK(ik_pose, ik_seed_state, timeout, solution, solution_callback, error_code, consistency_limits,
+                          options);
+}
+
+bool MoveItOPWKinematicsPlugin::searchPositionIK(const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state,
+                                           double timeout, std::vector<double>& solution,
+                                           const IKCallbackFn& solution_callback,
+                                           moveit_msgs::MoveItErrorCodes& error_code,
+                                           const kinematics::KinematicsQueryOptions& options) const
+{
+  std::vector<double> consistency_limits;
+  return searchPositionIK(ik_pose, ik_seed_state, timeout, solution, solution_callback, error_code, consistency_limits,
+                          options);
+}
+
+bool MoveItOPWKinematicsPlugin::searchPositionIK(const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state,
+                                           double timeout, const std::vector<double>& consistency_limits,
+                                           std::vector<double>& solution, const IKCallbackFn& solution_callback,
+                                           moveit_msgs::MoveItErrorCodes& error_code,
+                                           const kinematics::KinematicsQueryOptions& options) const
+{
+  return searchPositionIK(ik_pose, ik_seed_state, timeout, solution, solution_callback, error_code, consistency_limits,
+                          options);
+}
+
+bool MoveItOPWKinematicsPlugin::searchPositionIK(const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state,
+                                           double timeout, std::vector<double>& solution,
+                                           const IKCallbackFn& solution_callback,
+                                           moveit_msgs::MoveItErrorCodes& error_code,
+                                           const std::vector<double>& consistency_limits,
+                                           const kinematics::KinematicsQueryOptions& options) const
+{
+  // Convert single pose into a vector of one pose
+  std::vector<geometry_msgs::Pose> ik_poses;
+  ik_poses.push_back(ik_pose);
+
+  return searchPositionIK(ik_poses, ik_seed_state, timeout, consistency_limits, solution, solution_callback, error_code,
+                          options);
+}
+
+bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs::Pose>& ik_poses,
+                                           const std::vector<double>& ik_seed_state, double timeout,
+                                           const std::vector<double>& consistency_limits, std::vector<double>& solution,
+                                           const IKCallbackFn& solution_callback,
+                                           moveit_msgs::MoveItErrorCodes& error_code,
+                                           const kinematics::KinematicsQueryOptions& options) const
+{
+  // Check if active
+  if (!active_)
+  {
+    ROS_ERROR_NAMED("opw", "kinematics not active");
+    error_code.val = error_code.NO_IK_SOLUTION;
+    return false;
+  }
+
+  // Check if seed state correct
+  if (ik_seed_state.size() != dimension_)
+  {
+    ROS_ERROR_STREAM_NAMED("opw", "Seed state must have size " << dimension_ << " instead of size "
+                                                               << ik_seed_state.size());
+    error_code.val = error_code.NO_IK_SOLUTION;
+    return false;
+  }
+
+  // Check that we have the same number of poses as tips
+  if (tip_frames_.size() != ik_poses.size())
+  {
+    ROS_ERROR_STREAM_NAMED("opw", "Mismatched number of pose requests (" << ik_poses.size() << ") to tip frames ("
+                                                                         << tip_frames_.size()
+                                                                         << ") in searchPositionIK");
+    error_code.val = error_code.NO_IK_SOLUTION;
+    return false;
+  }
+
+  Eigen::Affine3d pose;
+  tf::poseMsgToEigen(ik_poses[0], pose);
+  if(!getIK(pose, ik_seed_state, solution))
+  {
+    ROS_ERROR_STREAM_NAMED("opw", "Failed to find IK solution");
+    error_code.val = error_code.NO_IK_SOLUTION;
+    return false;
+  }
+
+  ROS_INFO_STREAM_NAMED("opw", "IK Solver Succeeded!");
+  return true;
+}
+
+bool MoveItOPWKinematicsPlugin::getPositionFK(const std::vector<std::string>& link_names,
+                                        const std::vector<double>& joint_angles,
+                                        std::vector<geometry_msgs::Pose>& poses) const
+{
+  ros::WallTime n1 = ros::WallTime::now();
+  if (!active_)
+  {
+    ROS_ERROR_NAMED("opw", "kinematics not active");
+    return false;
+  }
+  poses.resize(link_names.size());
+  if (joint_angles.size() != dimension_)
+  {
+    ROS_ERROR_NAMED("opw", "Joint angles vector must have size: %d", dimension_);
+    return false;
+  }
+
+  ROS_ERROR_STREAM_NAMED("opw", "Forward kinematics not implemented");
+
+  return false;
+}
+
+const std::vector<std::string>& MoveItOPWKinematicsPlugin::getJointNames() const
+{
+  return ik_group_info_.joint_names;
+}
+
+const std::vector<std::string>& MoveItOPWKinematicsPlugin::getLinkNames() const
+{
+  return ik_group_info_.link_names;
+}
+
+const std::vector<std::string>& MoveItOPWKinematicsPlugin::getVariableNames() const
+{
+  return joint_model_group_->getVariableNames();
 }
 
 bool MoveItOPWKinematicsPlugin::setOPWParameters()
@@ -194,8 +347,33 @@ bool MoveItOPWKinematicsPlugin::setOPWParameters()
   return true;
 }
 
-bool MoveItOPWKinematicsPlugin::getAllIK(const Eigen::Affine3d &pose,
-                                         std::vector<std::vector<double>> &joint_poses) const
+double MoveItOPWKinematicsPlugin::distance(const std::vector<double> &a, const std::vector<double> &b) const
+{
+  double cost = 0.0;
+  for (size_t i = 0; i < a.size(); ++i)
+    cost += std::abs(b[i] - a[i]);
+  return cost;
+}
+
+// Compute the index of the closest joint pose in 'candidates' from 'target'
+std::size_t MoveItOPWKinematicsPlugin::closestJointPose( const std::vector<double> &target, const std::vector<std::vector<double>> &candidates) const
+{
+  size_t closest = 0; // index into candidates
+  double lowest_cost = std::numeric_limits<double>::max();
+  for (size_t i = 0; i < candidates.size(); ++i)
+  {
+    assert(target.size() == candidates[i].size());
+    double c = distance(target, candidates[i]);
+    if (c < lowest_cost)
+    {
+      closest = i;
+      lowest_cost = c;
+    }
+  }
+  return closest;
+}
+
+bool MoveItOPWKinematicsPlugin::getAllIK(const Eigen::Affine3d &pose, std::vector<std::vector<double>> &joint_poses) const
 {
   joint_poses.clear();
 
@@ -239,34 +417,4 @@ bool MoveItOPWKinematicsPlugin::getIK(const Eigen::Affine3d &pose,
   return true;
 }
 
-double MoveItOPWKinematicsPlugin::distance(const std::vector<double> &a, const std::vector<double> &b) const
-{
-  double cost = 0.0;
-  for (size_t i = 0; i < a.size(); ++i)
-    cost += std::abs(b[i] - a[i]);
-  return cost;
-}
-
-// Compute the index of the closest joint pose in 'candidates' from 'target'
-std::size_t MoveItOPWKinematicsPlugin::closestJointPose( const std::vector<double> &target, const std::vector<std::vector<double>> &candidates) const
-{
-  size_t closest = 0; // index into candidates
-  double lowest_cost = std::numeric_limits<double>::max();
-  for (size_t i = 0; i < candidates.size(); ++i)
-  {
-    assert(target.size() == candidates[i].size());
-    double c = distance(target, candidates[i]);
-    if (c < lowest_cost)
-    {
-      closest = i;
-      lowest_cost = c;
-    }
-  }
-  return closest;
-}
-
-} // namespace moveit_opw_kinematics_plugin
-
-// register MoveItOPWKinematicsPlugin as a KinematicsBase implementation
-#include <pluginlib/class_list_macros.h>
-PLUGINLIB_EXPORT_CLASS(moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin, kinematics::KinematicsBase);
+}  // namespace
