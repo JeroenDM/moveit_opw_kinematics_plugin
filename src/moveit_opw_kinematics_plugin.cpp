@@ -7,6 +7,7 @@
 
 #include <moveit/robot_state/conversions.h>
 #include <moveit/rdf_loader/rdf_loader.h>
+#include <moveit/kinematics_base/kinematics_base.h>
 
 // Eigen
 #include <Eigen/Core>
@@ -23,6 +24,8 @@ CLASS_LOADER_REGISTER_CLASS(moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlu
 
 namespace moveit_opw_kinematics_plugin
 {
+using kinematics::KinematicsResult;
+
 MoveItOPWKinematicsPlugin::MoveItOPWKinematicsPlugin() : active_(false)
 {
 }
@@ -267,6 +270,22 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs
 
   ROS_INFO_STREAM_NAMED("opw", "IK Solver Succeeded!");
   return true;
+}
+
+bool MoveItOPWKinematicsPlugin::getPositionIK(const std::vector<geometry_msgs::Pose> &ik_poses,
+                                              const std::vector<double> &ik_seed_state,
+                                              std::vector<std::vector<double>> &solutions,
+                                              KinematicsResult &result,
+                                              const kinematics::KinematicsQueryOptions &options) const
+{
+  if (ik_poses.size() > 1 || ik_poses.size() == 0)
+  {
+    ROS_ERROR_STREAM_NAMED("opw", "You can only get all solutions for a single pose.");
+    return false;
+  }
+  Eigen::Affine3d pose;
+  tf::poseMsgToEigen(ik_poses[0], pose);
+  return getAllIK(pose, solutions);
 }
 
 bool MoveItOPWKinematicsPlugin::getPositionFK(const std::vector<std::string>& link_names,

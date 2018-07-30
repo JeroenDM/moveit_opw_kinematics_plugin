@@ -24,6 +24,7 @@
 
 namespace moveit_opw_kinematics_plugin
 {
+  using kinematics::KinematicsResult;
 /**
  * @brief Specific implementation of kinematics using ROS service calls to communicate with
    external IK solvers. This version can be used with any robot. Supports non-chain kinematic groups
@@ -107,6 +108,12 @@ protected:
                    const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const;
 
   virtual bool setRedundantJoints(const std::vector<unsigned int>& redundant_joint_indices);
+
+  virtual bool getPositionIK(const std::vector<geometry_msgs::Pose> &ik_poses,
+                                              const std::vector<double> &ik_seed_state,
+                                              std::vector<std::vector<double>> &solutions,
+                                              KinematicsResult &result,
+                                              const kinematics::KinematicsQueryOptions &options) const;
 
 private:
   bool timedOut(const ros::WallTime& start_time, double duration) const;
