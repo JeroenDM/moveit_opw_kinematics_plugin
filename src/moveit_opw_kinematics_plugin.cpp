@@ -286,9 +286,20 @@ bool MoveItOPWKinematicsPlugin::getPositionFK(const std::vector<std::string>& li
     return false;
   }
 
-  ROS_ERROR_STREAM_NAMED("opw", "Forward kinematics not implemented");
+  // Check that we have the same number of poses as tips
+  if (tip_frames_.size() != poses.size())
+  {
+    ROS_ERROR_STREAM_NAMED("opw", "Mismatched number of pose requests (" << poses.size() << ") to tip frames ("
+                                                                         << tip_frames_.size()
+                                                                         << ") in searchPositionFK");
+    return false;
+  }
 
-  return false;
+  // forward function expect pointer to first element of array of joint values
+  // that is why &joint_angles[0] is passed
+  tf::poseEigenToMsg(opw_kinematics::forward(opw_parameters_, &joint_angles[0]), poses[0]);
+
+  return true;
 }
 
 const std::vector<std::string>& MoveItOPWKinematicsPlugin::getJointNames() const
