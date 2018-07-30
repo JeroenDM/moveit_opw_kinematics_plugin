@@ -137,17 +137,10 @@ install(
 
 # add a ros node to run the kuka_kr6_test
 # I don't know a better way to get a clean test output in the terminal
-# add_executable(${PROJECT_NAME}_utest test/utest.cpp)
-# set_target_properties(${PROJECT_NAME}_utest PROPERTIES OUTPUT_NAME utest PREFIX "")
-# target_link_libraries(${PROJECT_NAME}_utest
-#  gtest
-#  ${catkin_LIBRARIES}
-#  ${MOVEIT_LIB_NAME}
-# )
-
-add_executable(${PROJECT_NAME}_test_load_parameters test/test_load_parameters.cpp)
-set_target_properties(${PROJECT_NAME}_test_load_parameters PROPERTIES OUTPUT_NAME test_load_parameters PREFIX "")
-target_link_libraries(${PROJECT_NAME}_test_load_parameters
+add_executable(${PROJECT_NAME}_utest test/utest.cpp)
+set_target_properties(${PROJECT_NAME}_utest PROPERTIES OUTPUT_NAME utest PREFIX "")
+target_link_libraries(${PROJECT_NAME}_utest
+ gtest
  ${catkin_LIBRARIES}
  ${MOVEIT_LIB_NAME}
 )

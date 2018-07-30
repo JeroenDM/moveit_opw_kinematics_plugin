@@ -1,16 +1,10 @@
-#include "moveit_opw_kinematics_plugin/moveit_opw_kinematics_plugin.h"
-
-#include <Eigen/Dense>
-#include <fstream>
 #include <gtest/gtest.h>
-#include <map>
+#include <vector>
 #include <string>
 
 #include <ros/ros.h>
-#include <moveit/robot_model/robot_model.h>
-#include <urdf_parser/urdf_parser.h>
 #include <eigen_conversions/eigen_msg.h>
-#include <moveit_msgs/MoveItErrorCodes.h>
+#include <moveit_opw_kinematics_plugin/moveit_opw_kinematics_plugin.h>
 
 const double TOLERANCE = 1e-6; // absolute tolerance for EXPECT_NEAR checks
 
@@ -40,69 +34,38 @@ void comparePoses(const Transform<T> & Ta, const Transform<T> & Tb)
   EXPECT_NEAR(pa[2], pb[2], TOLERANCE);
 }
 
-const std::string urdf_path = "src/moveit_opw_kinematics_plugin/test/kuka_kr6r700sixx.urdf";
-const std::string srdf_path = "src/moveit_opw_kinematics_plugin/test/kuka_kr6r700sixx.srdf";
+TEST(testPlugin, testInit)
+{
+  moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin plugin;
+  bool res = plugin.initialize("robot_description", "manipulator", "base_link", "tool0", 0.1);
+  EXPECT_TRUE(res);
+}
 
-class LoadRobot : public testing::Test
+class LoadPlugin : public testing::Test
 {
 protected:
   void SetUp() override
   {
-
-    srdf_model_.reset(new srdf::Model());
-    std::string xml_string;
-    std::fstream xml_file(urdf_path.c_str(), std::fstream::in);
-    if (xml_file.is_open())
-    {
-      while (xml_file.good())
-      {
-        std::string line;
-        std::getline(xml_file, line);
-        xml_string += (line + "\n");
-      }
-      xml_file.close();
-      urdf_model_ = urdf::parseURDF(xml_string);
-    }
-    srdf_model_->initFile(*urdf_model_, srdf_path);
-    robot_model_.reset(new moveit::core::RobotModel(urdf_model_, srdf_model_));
+    plugin_.initialize("robot_description", "manipulator", "base_link", "tool0", 0.1);
   };
-
   void TearDown() override
   {
-  }
-
+  };
 protected:
-  urdf::ModelInterfaceSharedPtr urdf_model_;
-  srdf::ModelSharedPtr srdf_model_;
-  moveit::core::RobotModelPtr robot_model_;
+  moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin plugin_;
 };
 
-TEST_F(LoadRobot, InitOK)
-{
-  ASSERT_EQ(urdf_model_->getName(), "kuka_kr6r700sixx");
-  ASSERT_EQ(srdf_model_->getName(), "kuka_kr6r700sixx");
-}
-
-TEST_F(LoadRobot, initialize)
-{
-  moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin plugin;
-  plugin.initialize(robot_model_);
-}
-
-TEST_F(LoadRobot, positionFK)
+TEST_F(LoadPlugin, positionFK)
 {
   using Eigen::AngleAxisd;
   using Eigen::Translation3d;
   using Eigen::Vector3d;
 
-  moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin plugin;
-  plugin.initialize(robot_model_);
-
   std::vector<std::string> link_names;
   std::vector<double> joint_angles = {0, 0, 0, 0, 0, 0};
   std::vector<geometry_msgs::Pose> poses;
 
-  plugin.getPositionFK(link_names, joint_angles, poses);
+  plugin_.getPositionFK(plugin_.getLinkNames(), joint_angles, poses);
 
   Eigen::Affine3d pose_actual, pose_desired;
   tf::poseMsgToEigen(poses[0], pose_actual);
@@ -117,24 +80,17 @@ TEST_F(LoadRobot, positionFK)
 
 }
 
-TEST_F(LoadRobot, singleSolutionIK)
+TEST_F(LoadPlugin, singleSolutionIK)
 {
-  moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin plugin;
-  plugin.initialize(robot_model_);
-
-  std::vector<std::string> link_names;
   const std::vector<double> joint_angles = {0, 0.1, 0.2, 0.3, 0.4, 0.5};
   std::vector<geometry_msgs::Pose> poses;
 
-  plugin.getPositionFK(link_names, joint_angles, poses);
+  plugin_.getPositionFK(plugin_.getLinkNames(), joint_angles, poses);
   const geometry_msgs::Pose pose_in = poses[0];
-
-  // Eigen::Affine3d pose_actual, pose_desired;
-  // tf::poseMsgToEigen(poses[0], pose_actual);
 
   std::vector<double> solution;
   moveit_msgs::MoveItErrorCodes error_code;
-  bool res = plugin.getPositionIK(pose_in, joint_angles, solution, error_code);
+  bool res = plugin_.getPositionIK(pose_in, joint_angles, solution, error_code);
   EXPECT_TRUE(res);
 
   for (int i = 0; i < solution.size(); ++i)
@@ -143,38 +99,39 @@ TEST_F(LoadRobot, singleSolutionIK)
   }
 }
 
-// TEST_F(LoadRobot, allSolutionsIK)
-// {
-//   moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin plugin(robot_model_);
+TEST_F(LoadPlugin, allSolutionsIK)
+{
+  std::vector<std::string> link_names;
+  const std::vector<double> joint_angles = {0, 0.1, 0.2, 0.3, 0.4, 0.5};
+  std::vector<geometry_msgs::Pose> poses_out;
 
-//   std::vector<std::string> link_names;
-//   const std::vector<double> joint_angles = {0, 0.1, 0.2, 0.3, 0.4, 0.5};
-//   const std::vector<geometry_msgs::Pose> poses;
+  // find reachable pose
+  plugin_.getPositionFK(plugin_.getLinkNames(), joint_angles, poses_out);
 
-//   plugin.getPositionFK(link_names, joint_angles, poses);
-//   const geometry_msgs::Pose pose_in = poses[0];
+  // calculate all ik solutions for this pose
+  const std::vector<geometry_msgs::Pose> poses_in = {poses_out[0]};
+  std::vector<std::vector<double> > solutions;
+  kinematics::KinematicsResult result;
+  bool res = plugin_.getPositionIK(poses_in, joint_angles, solutions, result);
+  EXPECT_TRUE(res);
 
-//   // Eigen::Affine3d pose_actual, pose_desired;
-//   // tf::poseMsgToEigen(poses[0], pose_actual);
+  // check if fk for all this solutions gives the same pose
+  Eigen::Affine3d actual, desired;
+  tf::poseMsgToEigen(poses_out[0], desired);
+  for (auto js : solutions)
+  {
+    plugin_.getPositionFK(plugin_.getLinkNames(), js, poses_out);
+    tf::poseMsgToEigen(poses_out[0], actual);
+    comparePoses(actual, desired);
 
-//   std::vector<std::vector<double>> solutions;
-//   kinematics::KinematicsResult result;
-//   bool res = plugin.getPositionIK(poses, joint_angles, solutions, result);
-//   EXPECT_TRUE(res);
-
-//   for (int i = 0; i < solutions[0].size(); ++i)
-//   {
-//     EXPECT_NEAR(solutions[0][i], joint_angles[i], TOLERANCE);
-//   }
-// }
+  }
+}
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "utest");
+    ros::init(argc, argv, "test_moveit_opw_kinematics_plugin");
     testing::InitGoogleTest(&argc, argv);
     bool res = RUN_ALL_TESTS();
     ros::shutdown();
     return res;
 }
-
-
