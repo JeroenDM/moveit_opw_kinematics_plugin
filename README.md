@@ -1,5 +1,10 @@
 # opw_kinematics_plugin
-An attempt at writing a MoveIt! plugin for [opw_kinematics](https://github.com/Jmeyer1292/opw_kinematics). See [issues](https://github.com/JeroenDM/moveit_opw_kinematics_plugin/issues) the follow the implementation process. (Where I mostly have conversations with myself.)
+An attempt at writing a [MoveIt!](https://moveit.ros.org/) plugin for [opw_kinematics](https://github.com/Jmeyer1292/opw_kinematics). The package calculates closed form inverse kinematic solutions for typical industrial robots and was created by [Jmeyer1292](https://github.com/Jmeyer1292). A MoveIt! plugin for this package could be an alternative for the [ikfast plugin](https://github.com/ros-planning/moveit/tree/kinetic-devel/moveit_kinematics/ikfast_kinematics_plugin).
+
+See [issues](https://github.com/JeroenDM/moveit_opw_kinematics_plugin/issues) the follow the implementation process. (Where I mostly have conversations with myself.)
+
+The general template is copied from the moveit [srv_kinematics_plugin](https://github.com/ros-planning/moveit/tree/kinetic-devel/moveit_kinematics/srv_kinematics_plugin).
+Some functions are directly copied from the package [descartes_opw_model](https://github.com/Jmeyer1292/descartes_opw_model).
 
 To use this plugin with another robot, clone this package inside your workspace:
 ```bash
