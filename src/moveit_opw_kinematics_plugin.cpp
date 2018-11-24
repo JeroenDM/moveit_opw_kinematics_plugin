@@ -277,7 +277,6 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs
     return false;
   }
 
-  ROS_INFO_STREAM_NAMED("opw", "IK Solver Succeeded!");
   return true;
 }
 
@@ -432,8 +431,12 @@ bool MoveItOPWKinematicsPlugin::getAllIK(const Eigen::Affine3d& pose,
   // Eigen::Affine3d tool_pose = diff_base.inverse() * pose *
   // tip_frame.inverse();
 
+  // convert Eigen::Affine3d to Eigen::Isometry3d for opw_kinematics
+  Eigen::Isometry3d pose_isometry;
+  pose_isometry = pose.matrix();
+
   std::array<double, 6 * 8> sols;
-  opw_kinematics::inverse(opw_parameters_, pose, sols.data());
+  opw_kinematics::inverse(opw_parameters_, pose_isometry, sols.data());
 
   // Check the output
   std::vector<double> tmp(6);  // temporary storage for API reasons
