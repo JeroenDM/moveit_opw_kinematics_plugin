@@ -371,7 +371,7 @@ bool MoveItOPWKinematicsPlugin::setOPWParameters()
   std::vector<int> joint_sign_corrections, dummy3;
   if (!lookupParam(prefix + "kinematics_solver_joint_sign_corrections", joint_sign_corrections, dummy3))
   {
-    ROS_ERROR_STREAM("Failed to load joint offsets for ik solver.");
+    ROS_ERROR_STREAM("Failed to load joint sign corrections for ik solver.");
     return false;
   }
 
