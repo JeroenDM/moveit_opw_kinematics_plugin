@@ -299,7 +299,6 @@ bool MoveItOPWKinematicsPlugin::getPositionFK(const std::vector<std::string>& li
                                               const std::vector<double>& joint_angles,
                                               std::vector<geometry_msgs::Pose>& poses) const
 {
-  ros::WallTime n1 = ros::WallTime::now();
   if (!active_)
   {
     ROS_ERROR_NAMED("opw", "kinematics not active");
