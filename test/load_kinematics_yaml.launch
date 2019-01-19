@@ -1,3 +1,0 @@
-<launch>
-  <rosparam command="load" file="$(find moveit_opw_kinematics_plugin)/test/kinematics.yaml" />
-</launch>
