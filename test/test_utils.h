@@ -1,3 +1,6 @@
+#ifndef MOVEIT_OPW_KINEMATICS_TEST_UTILS_
+#define MOVEIT_OPW_KINEMATICS_TEST_UTILS_
+
 #include <Eigen/Geometry>
 
 namespace moveit_opw_kinematics_plugin
@@ -33,3 +36,5 @@ namespace testing
 }
 } // namespace testing
 } // namespace moveit_opw_kinematics_plugin
+
+#endif
