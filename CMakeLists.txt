@@ -145,3 +145,11 @@ target_link_libraries(${PROJECT_NAME}_utest
  ${catkin_LIBRARIES}
  ${MOVEIT_LIB_NAME}
 )
+
+add_executable(${PROJECT_NAME}_test_fanuc test/test_fanuc.cpp)
+set_target_properties(${PROJECT_NAME}_test_fanuc PROPERTIES OUTPUT_NAME test_fanuc PREFIX "")
+target_link_libraries(${PROJECT_NAME}_test_fanuc
+ gtest
+ ${catkin_LIBRARIES}
+ ${MOVEIT_LIB_NAME}
+)
