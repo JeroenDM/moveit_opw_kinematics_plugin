@@ -5,16 +5,12 @@
   <arg name="load_robot_description" value="true"/>
 </include>
 
-<!-- <group ns="fanuc"> -->
 <rosparam command="load" file="$(find moveit_opw_kinematics_plugin)/test/kinematics.yaml" />
-
 
 <node pkg="moveit_opw_kinematics_plugin" type="test_fanuc" name="test_fanuc" output="screen">
     <param name="tip_link" value="tool0" />
     <param name="root_link" value="base_link" />
     <param name="group" value="manipulator" />
 </node>
-
-<!-- </group> -->
 
 </launch>

@@ -22,9 +22,8 @@ protected:
   {
     plugin_.initialize("robot_description", "manipulator", "base_link", "tool0", 0.1);
   };
-  void TearDown() override
-  {
-  };
+  void TearDown() override{};
+
 protected:
   moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin plugin_;
 };
@@ -36,7 +35,7 @@ TEST_F(LoadPlugin, positionFK)
   using Eigen::Vector3d;
 
   std::vector<std::string> link_names;
-  std::vector<double> joint_angles = {0, 0, 0, 0, 0, 0};
+  std::vector<double> joint_angles = { 0, 0, 0, 0, 0, 0 };
   std::vector<geometry_msgs::Pose> poses;
 
   plugin_.getPositionFK(plugin_.getLinkNames(), joint_angles, poses);
@@ -51,12 +50,11 @@ TEST_F(LoadPlugin, positionFK)
   pose_desired = Translation3d(0.785, 0, 0.435) * AngleAxisd(M_PI_2, Vector3d::UnitY());
 
   moveit_opw_kinematics_plugin::testing::comparePoses(pose_actual, pose_desired);
-
 }
 
 TEST_F(LoadPlugin, singleSolutionIK)
 {
-  const std::vector<double> joint_angles = {0, 0.1, 0.2, 0.3, 0.4, 0.5};
+  const std::vector<double> joint_angles = { 0, 0.1, 0.2, 0.3, 0.4, 0.5 };
   std::vector<geometry_msgs::Pose> poses;
 
   plugin_.getPositionFK(plugin_.getLinkNames(), joint_angles, poses);
@@ -76,14 +74,14 @@ TEST_F(LoadPlugin, singleSolutionIK)
 TEST_F(LoadPlugin, allSolutionsIK)
 {
   std::vector<std::string> link_names;
-  const std::vector<double> joint_angles = {0, 0.1, 0.2, 0.3, 0.4, 0.5};
+  const std::vector<double> joint_angles = { 0, 0.1, 0.2, 0.3, 0.4, 0.5 };
   std::vector<geometry_msgs::Pose> poses_out;
 
   // find reachable pose
   plugin_.getPositionFK(plugin_.getLinkNames(), joint_angles, poses_out);
 
   // calculate all ik solutions for this pose
-  const std::vector<geometry_msgs::Pose> poses_in = {poses_out[0]};
+  const std::vector<geometry_msgs::Pose> poses_in = { poses_out[0] };
   std::vector<std::vector<double> > solutions;
   kinematics::KinematicsResult result;
   bool res = plugin_.getPositionIK(poses_in, joint_angles, solutions, result);
@@ -97,15 +95,14 @@ TEST_F(LoadPlugin, allSolutionsIK)
     plugin_.getPositionFK(plugin_.getLinkNames(), js, poses_out);
     tf::poseMsgToEigen(poses_out[0], actual);
     moveit_opw_kinematics_plugin::testing::comparePoses(actual, desired);
-
   }
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
-    ros::init(argc, argv, "test_moveit_opw_kinematics_plugin");
-    testing::InitGoogleTest(&argc, argv);
-    bool res = RUN_ALL_TESTS();
-    ros::shutdown();
-    return res;
+  ros::init(argc, argv, "test_moveit_opw_kinematics_plugin");
+  testing::InitGoogleTest(&argc, argv);
+  bool res = RUN_ALL_TESTS();
+  ros::shutdown();
+  return res;
 }
