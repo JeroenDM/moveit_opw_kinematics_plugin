@@ -119,42 +119,44 @@ TEST_F(TestKinematicsFanuc, InitOk)
     ASSERT_EQ(robot_model_->getJointModelGroupNames()[0], group_name_);
 }
 
-// TEST_F(TestKinematicsFanuc, OPWCompareIKAndFK)
-// {
-//   //std::vector<std::string> link_names;
-//   const std::vector<double> joint_angles = {0, 0.1, 0.2, 0.3, 0.4, 0.5};
-//   //std::vector<geometry_msgs::Pose> poses_out;
+TEST_F(TestKinematicsFanuc, TestAllIkSingleJointPose)
+{
+  //std::vector<std::string> link_names;
+  const std::vector<double> joint_angles = {0, 0.1, 0.2, 0.3, 0.4, 0.5};
+  //std::vector<geometry_msgs::Pose> poses_out;
 
-//   robot_state_->setJointGroupPositions(joint_model_group_, joint_angles);
+  robot_state_->setJointGroupPositions(joint_model_group_, joint_angles);
 
-//   // find reachable pose
-//   auto fk_pose = robot_state_->getGlobalLinkTransform(tip_link_);
+  // find reachable pose
+  auto fk_pose = robot_state_->getGlobalLinkTransform(tip_link_);
 
-//   // type conversions
-//   geometry_msgs::Pose fk_pose_msgs;
-//   tf::poseEigenToMsg(fk_pose, fk_pose_msgs);
-//   const std::vector<geometry_msgs::Pose> fk_poses = {fk_pose_msgs};
+  // type conversions
+  geometry_msgs::Pose fk_pose_msgs;
+  tf::poseEigenToMsg(fk_pose, fk_pose_msgs);
+  const std::vector<geometry_msgs::Pose> fk_poses = {fk_pose_msgs};
 
-//   // calculate all ik solutions for the pose in fk_poses
-//   std::vector<std::vector<double> > solutions;
-//   kinematics::KinematicsResult result;
-//   kinematics::KinematicsQueryOptions options();
-//   auto solver = joint_model_group_->getSolverInstance();
-//   solver->getPositionIK(fk_poses, joint_angles, solutions, result, options);
+  // calculate all ik solutions for the pose in fk_poses
+  std::vector<std::vector<double> > solutions;
+  kinematics::KinematicsResult result;
+  kinematics::KinematicsQueryOptions options;
+  const auto solver = joint_model_group_->getSolverInstance();
+  bool success = solver->getPositionIK(fk_poses, joint_angles, solutions, result, options);
+  std::cout << "Kinematics solver: " << solver->getBaseFrame() << std::endl;
+  ASSERT_TRUE(success);
 
-//   std::size_t num_solutions = solutions.size();
-//   ASSERT_GT(num_solutions, 0);
+  std::size_t num_solutions = solutions.size();
+  ASSERT_GT(num_solutions, 0);
 
-//   // check if fk for all this solutions gives the same pose
-//   Eigen::Affine3d actual;
-//   for (auto js : solutions)
-//   {
-//     robot_state_->setJointGroupPositions(joint_model_group_, js);
-//     actual = robot_state_->getGlobalLinkTransform(tip_link_);
-//     moveit_opw_kinematics_plugin::testing::comparePoses(actual, fk_pose);
+  // check if fk for all this solutions gives the same pose
+  Eigen::Affine3d actual;
+  for (auto js : solutions)
+  {
+    robot_state_->setJointGroupPositions(joint_model_group_, js);
+    actual = robot_state_->getGlobalLinkTransform(tip_link_);
+    moveit_opw_kinematics_plugin::testing::comparePoses(actual, fk_pose);
 
-//   }
-// }
+  }
+}
 
 int main(int argc, char** argv)
 {
