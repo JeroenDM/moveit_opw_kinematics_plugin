@@ -5,7 +5,7 @@
   <arg name="load_robot_description" value="true"/>
 </include>
 
-<node pkg="moveit_opw_kinematics_plugin" type="utest" name="utest" output="screen">
-</node>
+<test pkg="moveit_opw_kinematics_plugin" type="moveit_opw_kinematics_plugin_test_kuka" test-name="test_kuka">
+</test>
 
 </launch>
