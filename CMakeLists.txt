@@ -57,44 +57,9 @@ target_link_libraries(${MOVEIT_LIB_NAME}
   ${catkin_LIBRARIES}
 )
 
-## Add cmake target dependencies of the library
-## as an example, code may need to be generated before libraries
-## either from message generation or dynamic reconfigure
-# add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-## Declare a C++ executable
-## With catkin_make all packages are built within a single CMake context
-## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/opw_kinematics_plugin_node.cpp)
-
-## Rename C++ executable without prefix
-## The above recommended prefix causes long target names, the following renames the
-## target back to the shorter version for ease of user use
-## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
-# set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME node PREFIX "")
-
-## Add cmake target dependencies of the executable
-## same as for the library above
-# add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-## Specify libraries to link a library or executable target against
-# target_link_libraries(${PROJECT_NAME}_node
-#   ${catkin_LIBRARIES}
-# )
-
 #############
 ## Install ##
 #############
-
-# all install targets should use catkin DESTINATION variables
-# See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
-
-## Mark executable scripts (Python etc.) for installation
-## in contrast to setup.py, you can choose the destination
-# install(PROGRAMS
-#   scripts/my_python_script
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
 
 # Mark executables and/or libraries for installation
 install(TARGETS ${MOVEIT_LIB_NAME}
@@ -116,32 +81,31 @@ install(
   DESTINATION
     ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
-## Mark other files for installation (e.g. launch and bag files, etc.)
-# install(FILES
-#   # myfile1
-#   # myfile2
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
-
 #############
 ## Testing ##
 #############
 
-## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_opw_kinematics_plugin.cpp)
-# if(TARGET ${PROJECT_NAME}-test)
-#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
-# endif()
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  include_directories(test)
+  
+  add_rostest_gtest(${PROJECT_NAME}_test_kuka
+    test/test_kuka.rostest test/test_plugin.cpp
+    test/test_kuka_specific.cpp
+  )
+  target_link_libraries(${PROJECT_NAME}_test_kuka
+    gtest
+    ${catkin_LIBRARIES}
+    ${MOVEIT_LIB_NAME}
+  )
 
-## Add folders to be run by python nosetests
-# catkin_add_nosetests(test)
-
-# add a ros node to run the kuka_kr6_test
-# I don't know a better way to get a clean test output in the terminal
-add_executable(${PROJECT_NAME}_utest test/utest.cpp)
-set_target_properties(${PROJECT_NAME}_utest PROPERTIES OUTPUT_NAME utest PREFIX "")
-target_link_libraries(${PROJECT_NAME}_utest
- gtest
- ${catkin_LIBRARIES}
- ${MOVEIT_LIB_NAME}
-)
+  add_rostest_gtest(${PROJECT_NAME}_test_fanuc
+    test/test_fanuc.rostest
+    test/test_plugin.cpp
+  )
+  target_link_libraries(${PROJECT_NAME}_test_fanuc
+    gtest
+    ${catkin_LIBRARIES}
+    ${MOVEIT_LIB_NAME}
+  )
+endif()

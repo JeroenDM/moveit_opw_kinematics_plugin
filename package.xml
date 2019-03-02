@@ -64,8 +64,11 @@
 
   <exec_depend>moveit_core</exec_depend>
   <exec_depend>moveit_ros_planning</exec_depend>
+  <exec_depend>moveit_resources</exec_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>pluginlib</exec_depend>
+
+  <test_depend>rostest</test_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
