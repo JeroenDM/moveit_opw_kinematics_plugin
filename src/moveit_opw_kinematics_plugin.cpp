@@ -384,7 +384,7 @@ bool MoveItOPWKinematicsPlugin::setOPWParameters()
   for (std::size_t i = 0; i < joint_offsets.size(); ++i)
   {
     opw_parameters_.offsets[i] = joint_offsets[i];
-    opw_parameters_.sign_corrections[i] = joint_sign_corrections[i];
+    opw_parameters_.sign_corrections[i] = static_cast<signed char>(joint_sign_corrections[i]);
   }
 
   ROS_INFO_STREAM("Loaded parameters for ik solver:\n" << opw_parameters_);
