@@ -270,14 +270,36 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs
 
   Eigen::Affine3d pose;
   tf::poseMsgToEigen(ik_poses[0], pose);
-  if (!getIK(pose, ik_seed_state, solution))
+  std::vector<std::vector<double>> solutions;
+  if (!getAllIK(pose, solutions))
   {
     ROS_ERROR_STREAM_NAMED("opw", "Failed to find IK solution");
     error_code.val = error_code.NO_IK_SOLUTION;
     return false;
   }
 
-  return true;
+  //sort solutions by distance to seed state
+  std::sort(solutions.begin(), solutions.end(), [&](std::vector<double>& a, std::vector<double>& b) {
+      return distance(a, ik_seed_state) > distance(b, ik_seed_state);
+  });
+
+  if (!solution_callback) {
+      solution = solutions.front();
+      return true;
+  }
+
+  for (auto& sol : solutions) {
+      solution_callback(ik_poses[0], sol, error_code);
+      if (error_code.val == moveit_msgs::MoveItErrorCodes::SUCCESS)
+      {
+        solution = sol;
+        ROS_DEBUG_STREAM_NAMED("opw", "Solution passes callback");
+        return true;
+      }
+  }
+
+  ROS_WARN_STREAM_NAMED("opw", "No solution fullfilled requirements of solution callback");
+  return false;
 }
 
 bool MoveItOPWKinematicsPlugin::getPositionIK(const std::vector<geometry_msgs::Pose>& ik_poses,
