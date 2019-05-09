@@ -134,6 +134,8 @@ bool MoveItOPWKinematicsPlugin::setRedundantJoints(const std::vector<unsigned in
     return false;
   }
 
+  redundant_joint_indices_ = redundant_joints;
+
   return true;
 }
 
