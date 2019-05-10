@@ -234,6 +234,18 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const geometry_msgs::Pose& ik_p
                           options);
 }
 
+// struct for storing and sorting solutions
+struct LimitObeyingSol
+{
+  std::vector<double> value;
+  double dist_from_seed;
+
+  bool operator<(const LimitObeyingSol& a) const
+  {
+    return dist_from_seed < a.dist_from_seed;
+  }
+};
+
 bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs::Pose>& ik_poses,
                                                  const std::vector<double>& ik_seed_state, double timeout,
                                                  const std::vector<double>& consistency_limits,
@@ -273,32 +285,49 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs
   std::vector<std::vector<double>> solutions;
   if (!getAllIK(pose, solutions))
   {
-    ROS_ERROR_STREAM_NAMED("opw", "Failed to find IK solution");
+    ROS_INFO_STREAM_NAMED("opw", "Failed to find IK solution");
     error_code.val = error_code.NO_IK_SOLUTION;
     return false;
   }
 
+  std::vector<LimitObeyingSol> limit_obeying_solutions;
+
+  for (auto& sol : solutions) {
+      robot_state_->setJointGroupPositions(joint_model_group_, sol);
+      //robot_state_->update(); // not required for checking bounds
+      if (!robot_state_->satisfiesBounds(joint_model_group_)) {
+          ROS_DEBUG_STREAM_NAMED("opw", "Solution is outside bounds");
+          continue;
+      }
+      limit_obeying_solutions.push_back({sol, distance(sol, ik_seed_state)});
+  }
+
+  if (limit_obeying_solutions.empty()) {
+      ROS_INFO_NAMED("opw", "None of the solutions is within joint limits");
+      return false;
+  }
+
+  ROS_DEBUG_STREAM_NAMED("opw", "Solutions within limits: " << limit_obeying_solutions.size());
+
   //sort solutions by distance to seed state
-  std::sort(solutions.begin(), solutions.end(), [&](std::vector<double>& a, std::vector<double>& b) {
-      return distance(a, ik_seed_state) > distance(b, ik_seed_state);
-  });
+  std::sort(limit_obeying_solutions.begin(), limit_obeying_solutions.end());
 
   if (!solution_callback) {
-      solution = solutions.front();
+      solution = limit_obeying_solutions.front().value;
       return true;
   }
 
-  for (auto& sol : solutions) {
-      solution_callback(ik_poses[0], sol, error_code);
+  for (auto& sol : limit_obeying_solutions) {
+      solution_callback(ik_poses[0], sol.value, error_code);
       if (error_code.val == moveit_msgs::MoveItErrorCodes::SUCCESS)
       {
-        solution = sol;
+        solution = sol.value;
         ROS_DEBUG_STREAM_NAMED("opw", "Solution passes callback");
         return true;
       }
   }
 
-  ROS_WARN_STREAM_NAMED("opw", "No solution fullfilled requirements of solution callback");
+  ROS_INFO_STREAM_NAMED("opw", "No solution fullfilled requirements of solution callback");
   return false;
 }
 
