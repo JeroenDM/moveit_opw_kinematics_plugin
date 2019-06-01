@@ -10,7 +10,6 @@ env:
     - ROS_REPO=ros
     - ROSINSTALL_FILENAME=.travis.rosinstall
   matrix:
-    - ROS_DISTRO="kinetic" UPSTREAM_WORKSPACE=file
     - ROS_DISTRO="melodic" UPSTREAM_WORKSPACE=file
 
 install:
