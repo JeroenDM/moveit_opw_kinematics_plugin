@@ -1,0 +1,4 @@
+- git: {local-name : opw_kinematics, uri: 'https://github.com/Jmeyer1292/opw_kinematics.git', version: master}
+
+# test dependencies
+- git: {local-name : kuka_test_resources, uri: 'https://github.com/JeroenDM/kuka_test_resources.git', version: master}
