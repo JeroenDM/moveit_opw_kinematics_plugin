@@ -20,7 +20,6 @@ env:
 install:
   - git clone --quiet --depth=1 https://github.com/ros-industrial/industrial_ci.git .ci_config
   - git clone https://github.com/ros-industrial/kuka_experimental
-  - git clone https://github.com/JeroenDM/kuka_kr6r700_moveit_config
 
 script:
   - .ci_config/travis.sh
