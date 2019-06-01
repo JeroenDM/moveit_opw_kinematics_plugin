@@ -1,0 +1,2 @@
+# test dependencies
+- git: {local-name : kuka_test_resources, uri: 'https://github.com/JeroenDM/kuka_test_resources.git', version: master}
