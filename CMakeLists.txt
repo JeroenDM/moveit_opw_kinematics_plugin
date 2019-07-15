@@ -12,9 +12,11 @@ find_package(catkin REQUIRED COMPONENTS
   moveit_core
   moveit_ros_planning
   roscpp
-  opw_kinematics
   pluginlib
 )
+
+find_package(opw_kinematics REQUIRED)
+
 set(MOVEIT_LIB_NAME moveit_opw_kinematics_plugin)
 
 # System dependencies are found with CMake's conventions
@@ -55,6 +57,7 @@ add_library(${MOVEIT_LIB_NAME}
 
 target_link_libraries(${MOVEIT_LIB_NAME}
   ${catkin_LIBRARIES}
+  opw_kinematics::opw_kinematics
 )
 
 #############
