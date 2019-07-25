@@ -32,8 +32,21 @@ protected:
     if (nh.getParam(GROUP_PARAM, group_name_) && nh.getParam(ROOT_LINK_PARAM, root_link_) &&
         nh.getParam(TIP_LINK_PARAM, tip_link_))
     {
+      rdf_loader::RDFLoader rdf_loader(ROBOT_DESCRIPTION);
+      const srdf::ModelSharedPtr& srdf = rdf_loader.getSRDF();
+      const urdf::ModelInterfaceSharedPtr& urdf_model = rdf_loader.getURDF();
+
+      if (!urdf_model || !srdf)
+      {
+        ROS_ERROR_NAMED("opw", "URDF and SRDF must be loaded for SRV kinematics "
+                               "solver to work.");  // TODO: is this true?
+        return ;
+      }
+
+      robot_model_.reset(new robot_model::RobotModel(urdf_model, srdf));
+
       // the last parameter specifies "search_discretization", which is not used by the opw plugin
-      plugin_.initialize(ROBOT_DESCRIPTION, group_name_, root_link_, tip_link_, 0.1);
+      plugin_.initialize(*robot_model_.get(), group_name_, root_link_, {tip_link_}, 0.1);
     }
     else
     {
@@ -44,6 +57,7 @@ protected:
   {
   }
 
+  robot_model::RobotModelPtr robot_model_;
   moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin plugin_;
   std::string root_link_;
   std::string tip_link_;
