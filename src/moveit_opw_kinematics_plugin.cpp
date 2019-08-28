@@ -248,6 +248,37 @@ struct LimitObeyingSol
   }
 };
 
+void MoveItOPWKinematicsPlugin::expandIKSolutions(std::vector<std::vector<double> >& solutions) const
+{
+    const std::vector<const robot_model::JointModel*>& ajms = joint_model_group_->getActiveJointModels();
+    for (size_t i = 0; i < ajms.size(); ++i ) {
+        const robot_model::JointModel* jm = ajms[i];
+        if (jm->getVariableBounds().size() > 0) {
+            for (auto& bounds : jm->getVariableBounds()) {
+                // todo: what to do about continuous joints
+                if (!bounds.position_bounded_)
+                    continue;
+
+                std::vector<std::vector<double>> additional_solutions;
+                for (auto& sol : solutions) {
+                    std::vector<double> down_sol(sol);
+                    while (down_sol[i] - 2.0*M_PI > bounds.min_position_) {
+                        down_sol[i] -= 2.0*M_PI;
+                        additional_solutions.push_back(down_sol);
+                    }
+                    std::vector<double> up_sol(sol);
+                    while (up_sol[i] + 2.0*M_PI < bounds.max_position_) {
+                        up_sol[i] += 2.0*M_PI;
+                        additional_solutions.push_back(up_sol);
+                    }
+                }
+                ROS_DEBUG_STREAM_NAMED("opw", "Found "<< additional_solutions.size() << " additional solutions for j=" << i+1);
+                solutions.insert(solutions.end(), additional_solutions.begin(), additional_solutions.end());
+            }
+        }
+    }
+}
+
 bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs::Pose>& ik_poses,
                                                  const std::vector<double>& ik_seed_state, double timeout,
                                                  const std::vector<double>& consistency_limits,
@@ -294,34 +325,8 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs
 
   //for all solutions, check if solution +-360° is still inside limits
   // opw solution might be outside joint limits, extended one inside (asymmetric limits)
-  // therefore first extend solution space, then apply joint limits
-  const std::vector<const robot_model::JointModel*>& ajms = joint_model_group_->getActiveJointModels();
-  for (size_t i = 0; i < ajms.size(); ++i ) {
-      const robot_model::JointModel* jm = ajms[i];
-      if (jm->getVariableBounds().size() > 0) {
-          for (auto& bounds : jm->getVariableBounds()) {
-              // todo: what to do about continuous joints
-              if (!bounds.position_bounded_)
-                  continue;
-
-              std::vector<std::vector<double>> additional_solutions;
-              for (auto& sol : solutions) {
-                  std::vector<double> down_sol(sol);
-                  while (down_sol[i] - 2.0*M_PI > bounds.min_position_) {
-                      down_sol[i] -= 2.0*M_PI;
-                      additional_solutions.push_back(down_sol);
-                  }
-                  std::vector<double> up_sol(sol);
-                  while (up_sol[i] + 2.0*M_PI < bounds.max_position_) {
-                      up_sol[i] += 2.0*M_PI;
-                      additional_solutions.push_back(up_sol);
-                  }
-              }
-              ROS_DEBUG_STREAM_NAMED("opw", "Found "<< additional_solutions.size() << " additional solutions for j=" << i+1);
-              solutions.insert(solutions.end(), additional_solutions.begin(), additional_solutions.end());
-          }
-      }
-  }
+  // therefore first extend solution space, then apply joint limits later
+  expandIKSolutions(solutions);
 
   ROS_DEBUG_STREAM_NAMED("opw", "Now have " << solutions.size() << " potential solutions");
 

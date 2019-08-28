@@ -129,6 +129,15 @@ private:
   bool getAllIK(const Eigen::Affine3d& pose, std::vector<std::vector<double>>& joint_poses) const;
   bool getIK(const Eigen::Affine3d& pose, const std::vector<double>& seed_state, std::vector<double>& joint_pose) const;
 
+  /**
+   * @brief append IK solutions by adding +-2pi
+   *
+   * for all solutions, check if solution +-360° is still inside limits
+   * opw solution might be outside joint limits, extended one inside (asymmetric limits)
+   * therefore this just extends the solution space, need to apply joint limits separately
+   */
+  void expandIKSolutions(std::vector<std::vector<double>>& solutions) const;
+
   bool active_; /** Internal variable that indicates whether solvers are configured and ready */
 
   moveit_msgs::KinematicSolverInfo ik_group_info_; /** Stores information for the inverse kinematics solver */
