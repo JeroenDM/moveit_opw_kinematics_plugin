@@ -323,8 +323,8 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs
     return false;
   }
 
-  //for all solutions, check if solution +-360° is still inside limits
-  // opw solution might be outside joint limits, extended one inside (asymmetric limits)
+  // for all solutions, check if solution +-360° is still inside limits
+  // An opw solution might be outside the joint limits, while the extended one is inside (e.g. asymmetric limits)
   // therefore first extend solution space, then apply joint limits later
   expandIKSolutions(solutions);
 

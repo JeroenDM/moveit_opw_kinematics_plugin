@@ -132,8 +132,8 @@ private:
   /**
    * @brief append IK solutions by adding +-2pi
    *
-   * for all solutions, check if solution +-360° is still inside limits
-   * opw solution might be outside joint limits, extended one inside (asymmetric limits)
+   * For all solutions, check if solution +-360° is still inside limits
+   * An opw solution might be outside the joint limits, while the extended one is inside (e.g. asymmetric limits)
    * therefore this just extends the solution space, need to apply joint limits separately
    */
   void expandIKSolutions(std::vector<std::vector<double>>& solutions) const;
