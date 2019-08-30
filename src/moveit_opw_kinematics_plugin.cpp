@@ -30,7 +30,7 @@ MoveItOPWKinematicsPlugin::MoveItOPWKinematicsPlugin() : active_(false)
 {
 }
 
-bool MoveItOPWKinematicsPlugin::initialize(const std::string& robot_description, const std::string& group_name,
+bool MoveItOPWKinematicsPlugin::initialize(const moveit::core::RobotModel& robot_model, const std::string& group_name,
                                            const std::string& base_frame, const std::vector<std::string>& tip_frames,
                                            double search_discretization)
 {
@@ -38,20 +38,7 @@ bool MoveItOPWKinematicsPlugin::initialize(const std::string& robot_description,
 
   ROS_INFO_STREAM_NAMED("opw", "MoveItOPWKinematicsPlugin initializing");
 
-  setValues(robot_description, group_name, base_frame, tip_frames, search_discretization);
-
-  rdf_loader::RDFLoader rdf_loader(robot_description_);
-  const srdf::ModelSharedPtr& srdf = rdf_loader.getSRDF();
-  const urdf::ModelInterfaceSharedPtr& urdf_model = rdf_loader.getURDF();
-
-  if (!urdf_model || !srdf)
-  {
-    ROS_ERROR_NAMED("opw", "URDF and SRDF must be loaded for SRV kinematics "
-                           "solver to work.");  // TODO: is this true?
-    return false;
-  }
-
-  robot_model_.reset(new robot_model::RobotModel(urdf_model, srdf));
+  storeValues(robot_model, group_name, base_frame, tip_frames, search_discretization);
 
   joint_model_group_ = robot_model_->getJointModelGroup(group_name);
   if (!joint_model_group_)
