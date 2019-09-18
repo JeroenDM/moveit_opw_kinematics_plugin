@@ -53,6 +53,7 @@ include_directories(
 # Declare a C++ library
 add_library(${MOVEIT_LIB_NAME}
   src/moveit_opw_kinematics_plugin.cpp
+  src/moveit_opw_railed_kinematics_plugin.cpp
 )
 
 target_link_libraries(${MOVEIT_LIB_NAME}
@@ -91,7 +92,7 @@ install(
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
   include_directories(test)
-  
+
   add_rostest_gtest(${PROJECT_NAME}_test_kuka
     test/test_kuka.rostest test/test_plugin.cpp
     test/test_kuka_specific.cpp

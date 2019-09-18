@@ -5,4 +5,10 @@
        based on package opw_kinematics.
     </description>
   </class>
+  <class name="moveit_opw_kinematics_plugin/MoveItOPWRailedKinematicsPlugin" type="moveit_opw_kinematics_plugin::MoveItOPWRailedKinematicsPlugin" base_class_type="kinematics::KinematicsBase">
+    <description>
+      Analytic kinematics for industrial robots on a rail
+       based on package opw_kinematics.
+    </description>
+  </class>
 </library>
