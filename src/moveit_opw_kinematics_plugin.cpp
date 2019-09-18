@@ -300,18 +300,6 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const geometry_msgs::Pose& ik_p
                           options);
 }
 
-// struct for storing and sorting solutions
-struct LimitObeyingSol
-{
-  std::vector<double> value;
-  double dist_from_seed;
-
-  bool operator<(const LimitObeyingSol& a) const
-  {
-    return dist_from_seed < a.dist_from_seed;
-  }
-};
-
 bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs::Pose>& ik_poses,
                                                  const std::vector<double>& ik_seed_state, double /*timeout*/,
                                                  const std::vector<double>& /*consistency_limits*/,
