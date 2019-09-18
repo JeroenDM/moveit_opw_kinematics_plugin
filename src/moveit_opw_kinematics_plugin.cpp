@@ -282,18 +282,6 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const geometry_msgs::Pose& ik_p
                           options);
 }
 
-// struct for storing and sorting solutions
-struct LimitObeyingSol
-{
-  std::vector<double> value;
-  double dist_from_seed;
-
-  bool operator<(const LimitObeyingSol& a) const
-  {
-    return dist_from_seed < a.dist_from_seed;
-  }
-};
-
 void MoveItOPWKinematicsPlugin::expandIKSolutions(std::vector<std::vector<double>>& solutions) const
 {
   const std::vector<const robot_model::JointModel*>& ajms = joint_model_group_->getActiveJointModels();

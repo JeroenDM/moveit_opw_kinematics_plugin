@@ -32,6 +32,19 @@ using kinematics::KinematicsResult;
 class MoveItOPWKinematicsPlugin : public kinematics::KinematicsBase
 {
 public:
+
+  // struct for storing and sorting solutions
+  struct LimitObeyingSol
+  {
+    std::vector<double> value;
+    double dist_from_seed;
+
+    bool operator<(const LimitObeyingSol& a) const
+    {
+      return dist_from_seed < a.dist_from_seed;
+    }
+  };
+
   /**
    *  @brief Default constructor
    */
