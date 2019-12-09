@@ -274,11 +274,11 @@ void MoveItOPWKinematicsPlugin::expandIKSolutions(std::vector<std::vector<double
 }
 
 bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs::Pose>& ik_poses,
-                                                 const std::vector<double>& ik_seed_state, double timeout,
-                                                 const std::vector<double>& consistency_limits,
+                                                 const std::vector<double>& ik_seed_state, double /*timeout*/,
+                                                 const std::vector<double>& /*consistency_limits*/,
                                                  std::vector<double>& solution, const IKCallbackFn& solution_callback,
                                                  moveit_msgs::MoveItErrorCodes& error_code,
-                                                 const kinematics::KinematicsQueryOptions& options) const
+                                                 const kinematics::KinematicsQueryOptions& /*options*/) const
 {
   // Check if active
   if (!active_)
@@ -371,9 +371,9 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs
 }
 
 bool MoveItOPWKinematicsPlugin::getPositionIK(const std::vector<geometry_msgs::Pose>& ik_poses,
-                                              const std::vector<double>& ik_seed_state,
-                                              std::vector<std::vector<double>>& solutions, KinematicsResult& result,
-                                              const kinematics::KinematicsQueryOptions& options) const
+                                              const std::vector<double>& /*ik_seed_state*/,
+                                              std::vector<std::vector<double>>& solutions, KinematicsResult& /*result*/,
+                                              const kinematics::KinematicsQueryOptions& /*options*/) const
 {
   if (ik_poses.size() > 1 || ik_poses.size() == 0)
   {
