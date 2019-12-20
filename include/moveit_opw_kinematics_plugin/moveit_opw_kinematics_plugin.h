@@ -129,6 +129,18 @@ private:
   bool getAllIK(const Eigen::Affine3d& pose, std::vector<std::vector<double>>& joint_poses) const;
   bool getIK(const Eigen::Affine3d& pose, const std::vector<double>& seed_state, std::vector<double>& joint_pose) const;
 
+  /**
+   * @brief check forward and inverse kinematics consistency
+   *
+   * A basic tests to check if the geometric parameters loaded at initialization are correct.
+   */
+  bool selfTest();
+
+  /**
+   * @brief check if two poses are the same within an absolute tolerance of 1e-6
+   */
+  bool comparePoses(Eigen::Isometry3d& Ta, Eigen::Isometry3d& Tb);
+
   bool active_; /** Internal variable that indicates whether solvers are configured and ready */
 
   moveit_msgs::KinematicSolverInfo ik_group_info_; /** Stores information for the inverse kinematics solver */
