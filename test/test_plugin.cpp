@@ -40,13 +40,13 @@ protected:
       {
         ROS_ERROR_NAMED("opw", "URDF and SRDF must be loaded for SRV kinematics "
                                "solver to work.");  // TODO: is this true?
-        return ;
+        return;
       }
 
       robot_model_.reset(new robot_model::RobotModel(urdf_model, srdf));
 
       // the last parameter specifies "search_discretization", which is not used by the opw plugin
-      plugin_.initialize(*robot_model_.get(), group_name_, root_link_, {tip_link_}, 0.1);
+      plugin_.initialize(*robot_model_.get(), group_name_, root_link_, { tip_link_ }, 0.1);
     }
     else
     {

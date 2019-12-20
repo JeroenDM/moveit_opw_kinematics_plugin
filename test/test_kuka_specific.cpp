@@ -19,9 +19,11 @@ protected:
     const urdf::ModelInterfaceSharedPtr& urdf_model = rdf_loader.getURDF();
 
     robot_model_.reset(new robot_model::RobotModel(urdf_model, srdf));
-    plugin_.initialize(*robot_model_.get(), "manipulator", "base_link", {"tool0"}, 0.1);
+    plugin_.initialize(*robot_model_.get(), "manipulator", "base_link", { "tool0" }, 0.1);
   }
-  void TearDown() override {}
+  void TearDown() override
+  {
+  }
 
 protected:
   robot_model::RobotModelPtr robot_model_;
@@ -29,7 +31,7 @@ protected:
 };
 
 /** \Brief check forward kinematics for robot home position
- * 
+ *
  * Calculate by hand position and oriention of tool0 when all joint angles are zero
  * px = a1 + c2 + c3 + c4
  * py = 0
@@ -50,14 +52,13 @@ TEST_F(TestKukaSpecific, positionFKAllZero)
   Eigen::Isometry3d pose_actual, pose_desired;
   tf::poseMsgToEigen(poses[0], pose_actual);
 
-  
   pose_desired = Translation3d(0.785, 0, 0.435) * AngleAxisd(M_PI_2, Vector3d::UnitY());
 
   moveit_opw_kinematics_plugin::testing::comparePoses(pose_actual, pose_desired);
 }
 
 /** \Brief check forward kinematics for a known position
- * 
+ *
  * WARNING: Ugly add hoc test
  * This test is meant to catch errors in the specified joint_signed_corrections
  * of joint 1, 4 and 6.
@@ -80,7 +81,6 @@ TEST_F(TestKukaSpecific, positionFKCheckSigns)
   Eigen::Isometry3d pose_actual, pose_desired;
   tf::poseMsgToEigen(poses[0], pose_actual);
 
-  
   // rotation for the joint offset of joint 2
   pose_desired = Translation3d(0, 0, 0) * AngleAxisd(M_PI_2, Vector3d::UnitY());
 
