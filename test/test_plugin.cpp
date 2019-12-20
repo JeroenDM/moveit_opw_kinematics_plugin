@@ -38,8 +38,8 @@ protected:
 
       if (!urdf_model || !srdf)
       {
-        ROS_ERROR_NAMED("opw", "URDF and SRDF must be loaded for SRV kinematics "
-                               "solver to work.");  // TODO: is this true?
+        ROS_ERROR_NAMED("opw", "URDF and SRDF must be loaded for OPW kinematics "
+                               "tests to work.");
         return;
       }
 

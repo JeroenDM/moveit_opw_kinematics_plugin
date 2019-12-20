@@ -112,12 +112,12 @@ bool MoveItOPWKinematicsPlugin::setRedundantJoints(const std::vector<unsigned in
 {
   if (num_possible_redundant_joints_ < 0)
   {
-    ROS_ERROR_NAMED("srv", "This group cannot have redundant joints");
+    ROS_ERROR_NAMED("opw", "This group cannot have redundant joints");
     return false;
   }
   if (redundant_joints.size() > static_cast<std::size_t>(num_possible_redundant_joints_))
   {
-    ROS_ERROR_NAMED("srv", "This group can only have %d redundant joints", num_possible_redundant_joints_);
+    ROS_ERROR_NAMED("opw", "This group can only have %d redundant joints", num_possible_redundant_joints_);
     return false;
   }
 
