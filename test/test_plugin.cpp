@@ -87,7 +87,7 @@ TEST_F(TestPlugin, CompareIKAndFK)
   EXPECT_TRUE(res);
 
   // check if fk for all this solutions gives the same pose
-  Eigen::Affine3d actual, desired;
+  Eigen::Isometry3d actual, desired;
   tf::poseMsgToEigen(poses_out[0], desired);
   for (auto js : solutions)
   {

@@ -93,7 +93,7 @@ TEST_F(TestKinematicsFanuc, TestAllIkSingleJointPose)
   ASSERT_GT(num_solutions, 0);
 
   // check if fk for all this solutions gives the same pose
-  Eigen::Affine3d actual_pose;
+  Eigen::Isometry3d actual_pose;
   for (auto js : solutions)
   {
     robot_state_->setJointGroupPositions(joint_model_group_, js);

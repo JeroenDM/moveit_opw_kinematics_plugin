@@ -307,7 +307,7 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs
     return false;
   }
 
-  Eigen::Affine3d pose;
+  Eigen::Isometry3d pose;
   tf::poseMsgToEigen(ik_poses[0], pose);
   std::vector<std::vector<double>> solutions;
   if (!getAllIK(pose, solutions))
@@ -380,7 +380,7 @@ bool MoveItOPWKinematicsPlugin::getPositionIK(const std::vector<geometry_msgs::P
     ROS_ERROR_STREAM_NAMED("opw", "You can only get all solutions for a single pose.");
     return false;
   }
-  Eigen::Affine3d pose;
+  Eigen::Isometry3d pose;
   tf::poseMsgToEigen(ik_poses[0], pose);
   return getAllIK(pose, solutions);
 }
@@ -509,7 +509,7 @@ std::size_t MoveItOPWKinematicsPlugin::closestJointPose(const std::vector<double
   return closest;
 }
 
-bool MoveItOPWKinematicsPlugin::getAllIK(const Eigen::Affine3d& pose,
+bool MoveItOPWKinematicsPlugin::getAllIK(const Eigen::Isometry3d& pose,
                                          std::vector<std::vector<double>>& joint_poses) const
 {
   joint_poses.clear();
@@ -517,15 +517,11 @@ bool MoveItOPWKinematicsPlugin::getAllIK(const Eigen::Affine3d& pose,
   // Transform input pose
   // needed if we introduce a tip frame different from tool0
   // or a different base frame
-  // Eigen::Affine3d tool_pose = diff_base.inverse() * pose *
+  // Eigen::Isometry3d tool_pose = diff_base.inverse() * pose *
   // tip_frame.inverse();
 
-  // convert Eigen::Affine3d to Eigen::Isometry3d for opw_kinematics
-  Eigen::Isometry3d pose_isometry;
-  pose_isometry = pose.matrix();
-
   std::array<double, 6 * 8> sols;
-  opw_kinematics::inverse(opw_parameters_, pose_isometry, sols.data());
+  opw_kinematics::inverse(opw_parameters_, pose, sols.data());
 
   // Check the output
   std::vector<double> tmp(6);  // temporary storage for API reasons
@@ -548,7 +544,7 @@ bool MoveItOPWKinematicsPlugin::getAllIK(const Eigen::Affine3d& pose,
   return joint_poses.size() > 0;
 }
 
-bool MoveItOPWKinematicsPlugin::getIK(const Eigen::Affine3d& pose, const std::vector<double>& seed_state,
+bool MoveItOPWKinematicsPlugin::getIK(const Eigen::Isometry3d& pose, const std::vector<double>& seed_state,
                                       std::vector<double>& joint_pose) const
 {
   // Descartes Robot Model interface calls for 'closest' point to seed position
