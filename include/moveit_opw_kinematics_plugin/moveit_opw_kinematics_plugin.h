@@ -118,8 +118,8 @@ private:
   double distance(const std::vector<double>& a, const std::vector<double>& b) const;
   std::size_t closestJointPose(const std::vector<double>& target,
                                const std::vector<std::vector<double>>& candidates) const;
-  bool getAllIK(const Eigen::Affine3d& pose, std::vector<std::vector<double>>& joint_poses) const;
-  bool getIK(const Eigen::Affine3d& pose, const std::vector<double>& seed_state, std::vector<double>& joint_pose) const;
+  bool getAllIK(const Eigen::Isometry3d& pose, std::vector<std::vector<double>>& joint_poses) const;
+  bool getIK(const Eigen::Isometry3d& pose, const std::vector<double>& seed_state, std::vector<double>& joint_pose) const;
 
   /**
    * @brief append IK solutions by adding +-2pi

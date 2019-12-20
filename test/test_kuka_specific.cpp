@@ -47,7 +47,7 @@ TEST_F(TestKukaSpecific, positionFKAllZero)
 
   plugin_.getPositionFK(plugin_.getLinkNames(), joint_angles, poses);
 
-  Eigen::Affine3d pose_actual, pose_desired;
+  Eigen::Isometry3d pose_actual, pose_desired;
   tf::poseMsgToEigen(poses[0], pose_actual);
 
   
@@ -77,7 +77,7 @@ TEST_F(TestKukaSpecific, positionFKCheckSigns)
 
   plugin_.getPositionFK(plugin_.getLinkNames(), joint_angles, poses);
 
-  Eigen::Affine3d pose_actual, pose_desired;
+  Eigen::Isometry3d pose_actual, pose_desired;
   tf::poseMsgToEigen(poses[0], pose_actual);
 
   
