@@ -46,8 +46,8 @@ bool MoveItOPWKinematicsPlugin::initialize(const std::string& robot_description,
 
   if (!urdf_model || !srdf)
   {
-    ROS_ERROR_NAMED("opw", "URDF and SRDF must be loaded for SRV kinematics "
-                           "solver to work.");  // TODO: is this true?
+    ROS_ERROR_NAMED("opw", "URDF and SRDF must be loaded for OPW kinematics "
+                           "solver to work.");
     return false;
   }
 
@@ -125,12 +125,12 @@ bool MoveItOPWKinematicsPlugin::setRedundantJoints(const std::vector<unsigned in
 {
   if (num_possible_redundant_joints_ < 0)
   {
-    ROS_ERROR_NAMED("srv", "This group cannot have redundant joints");
+    ROS_ERROR_NAMED("opw", "This group cannot have redundant joints");
     return false;
   }
   if (redundant_joints.size() > static_cast<std::size_t>(num_possible_redundant_joints_))
   {
-    ROS_ERROR_NAMED("srv", "This group can only have %d redundant joints", num_possible_redundant_joints_);
+    ROS_ERROR_NAMED("opw", "This group can only have %d redundant joints", num_possible_redundant_joints_);
     return false;
   }
 
@@ -294,39 +294,44 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs
 
   std::vector<LimitObeyingSol> limit_obeying_solutions;
 
-  for (auto& sol : solutions) {
-      robot_state_->setJointGroupPositions(joint_model_group_, sol);
-      //robot_state_->update(); // not required for checking bounds
-      if (!robot_state_->satisfiesBounds(joint_model_group_)) {
-          ROS_DEBUG_STREAM_NAMED("opw", "Solution is outside bounds");
-          continue;
-      }
-      limit_obeying_solutions.push_back({sol, distance(sol, ik_seed_state)});
+  for (auto& sol : solutions)
+  {
+    robot_state_->setJointGroupPositions(joint_model_group_, sol);
+    // robot_state_->update(); // not required for checking bounds
+    if (!robot_state_->satisfiesBounds(joint_model_group_))
+    {
+      ROS_DEBUG_STREAM_NAMED("opw", "Solution is outside bounds");
+      continue;
+    }
+    limit_obeying_solutions.push_back({ sol, distance(sol, ik_seed_state) });
   }
 
-  if (limit_obeying_solutions.empty()) {
-      ROS_INFO_NAMED("opw", "None of the solutions is within joint limits");
-      return false;
+  if (limit_obeying_solutions.empty())
+  {
+    ROS_INFO_NAMED("opw", "None of the solutions is within joint limits");
+    return false;
   }
 
   ROS_DEBUG_STREAM_NAMED("opw", "Solutions within limits: " << limit_obeying_solutions.size());
 
-  //sort solutions by distance to seed state
+  // sort solutions by distance to seed state
   std::sort(limit_obeying_solutions.begin(), limit_obeying_solutions.end());
 
-  if (!solution_callback) {
-      solution = limit_obeying_solutions.front().value;
-      return true;
+  if (!solution_callback)
+  {
+    solution = limit_obeying_solutions.front().value;
+    return true;
   }
 
-  for (auto& sol : limit_obeying_solutions) {
-      solution_callback(ik_poses[0], sol.value, error_code);
-      if (error_code.val == moveit_msgs::MoveItErrorCodes::SUCCESS)
-      {
-        solution = sol.value;
-        ROS_DEBUG_STREAM_NAMED("opw", "Solution passes callback");
-        return true;
-      }
+  for (auto& sol : limit_obeying_solutions)
+  {
+    solution_callback(ik_poses[0], sol.value, error_code);
+    if (error_code.val == moveit_msgs::MoveItErrorCodes::SUCCESS)
+    {
+      solution = sol.value;
+      ROS_DEBUG_STREAM_NAMED("opw", "Solution passes callback");
+      return true;
+    }
   }
 
   ROS_INFO_STREAM_NAMED("opw", "No solution fullfilled requirements of solution callback");
