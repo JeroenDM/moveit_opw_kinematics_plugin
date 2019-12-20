@@ -119,7 +119,8 @@ private:
   std::size_t closestJointPose(const std::vector<double>& target,
                                const std::vector<std::vector<double>>& candidates) const;
   bool getAllIK(const Eigen::Isometry3d& pose, std::vector<std::vector<double>>& joint_poses) const;
-  bool getIK(const Eigen::Isometry3d& pose, const std::vector<double>& seed_state, std::vector<double>& joint_pose) const;
+  bool getIK(const Eigen::Isometry3d& pose, const std::vector<double>& seed_state,
+             std::vector<double>& joint_pose) const;
 
   /**
    * @brief append IK solutions by adding +-2pi
@@ -129,6 +130,18 @@ private:
    * therefore this just extends the solution space, need to apply joint limits separately
    */
   void expandIKSolutions(std::vector<std::vector<double>>& solutions) const;
+
+  /**
+   * @brief check forward and inverse kinematics consistency
+   *
+   * A basic tests to check if the geometric parameters loaded at initialization are correct.
+   */
+  bool selfTest();
+
+  /**
+   * @brief check if two poses are the same within an absolute tolerance of 1e-6
+   */
+  bool comparePoses(Eigen::Isometry3d& Ta, Eigen::Isometry3d& Tb);
 
   bool active_; /** Internal variable that indicates whether solvers are configured and ready */
 
