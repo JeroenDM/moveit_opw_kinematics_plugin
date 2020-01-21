@@ -176,6 +176,9 @@ bool MoveItOPWKinematicsPlugin::selfTest()
   auto fk_pose_opw = opw_kinematics::forward(opw_parameters_, &joint_angles[0]);
   robot_state_->setJointGroupPositions(joint_model_group_, joint_angles);
   auto fk_pose_moveit = robot_state_->getGlobalLinkTransform(tip_frames_[0]);
+  // group/robot might not be at origin, subtract base transform
+  auto base = robot_state_->getGlobalLinkTransform(base_frame_);
+  fk_pose_moveit = base.inverse() * fk_pose_moveit;
 
   if (!comparePoses(fk_pose_opw, fk_pose_moveit))
   {
