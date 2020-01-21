@@ -63,7 +63,7 @@ protected:
 TEST_F(TestPlugin, InitFaulty)
 {
   // the last parameter specifies "search_discretization", which is not used by the opw plugin
-  bool res = plugin_.initialize(*robot_model_.get(), group_name_, root_link_, { tip_link_ }, 0.1);
+  bool res = plugin_.initialize(ROBOT_DESCRIPTION, group_name_, root_link_, { tip_link_ }, 0.1);
   EXPECT_FALSE(res);
 }
 
