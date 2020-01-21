@@ -139,7 +139,7 @@ private:
   /**
    * @brief check if two poses are the same within an absolute tolerance of 1e-6
    */
-  bool comparePoses(Eigen::Isometry3d& Ta, Eigen::Isometry3d& Tb);
+  bool comparePoses(Eigen::Isometry3d& Ta, Eigen::Affine3d& Tb);
 
   bool active_; /** Internal variable that indicates whether solvers are configured and ready */
 

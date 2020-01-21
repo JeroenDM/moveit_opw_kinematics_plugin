@@ -190,7 +190,7 @@ bool MoveItOPWKinematicsPlugin::selfTest()
   return true;
 }
 
-bool MoveItOPWKinematicsPlugin::comparePoses(Eigen::Isometry3d& Ta, Eigen::Isometry3d& Tb)
+bool MoveItOPWKinematicsPlugin::comparePoses(Eigen::Isometry3d& Ta, Eigen::Affine3d& Tb)
 {
   const float TOLERANCE = 1e-6;
 
