@@ -10,6 +10,7 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   eigen_conversions
   moveit_core
+  moveit_ros_planning
   roscpp
   pluginlib
 )
