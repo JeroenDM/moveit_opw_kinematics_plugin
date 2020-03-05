@@ -1,12 +1,7 @@
 #include <class_loader/class_loader.hpp>
 #include <moveit_opw_kinematics_plugin/moveit_opw_kinematics_plugin.h>
 
-// URDF, SRDF
-#include <srdfdom/model.h>
-#include <urdf_model/model.h>
-
 #include <moveit/kinematics_base/kinematics_base.h>
-#include <moveit/rdf_loader/rdf_loader.h>
 #include <moveit/robot_state/conversions.h>
 
 // Eigen
