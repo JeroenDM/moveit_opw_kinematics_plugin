@@ -9,5 +9,5 @@ robot_description_kinematics:
       c2:  0.315
       c3:  0.365
       c4:  0.081
-    kinematics_solver_joint_offsets: [0.0, 0, 0, 0, 0, 0]
+    kinematics_solver_joint_offsets: [0.0, -1.57079632679, 0, 0, 0, 0]
     kinematics_solver_joint_sign_corrections: [-1, 1, 1, -1, 1, -1]
