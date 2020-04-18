@@ -1,6 +1,9 @@
 #include <class_loader/class_loader.hpp>
 #include <moveit_opw_kinematics_plugin/moveit_opw_kinematics_plugin.h>
 
+// abs
+#include <cstdlib>
+
 // URDF, SRDF
 #include <srdfdom/model.h>
 #include <urdf_model/model.h>
@@ -200,7 +203,7 @@ bool MoveItOPWKinematicsPlugin::comparePoses(Eigen::Isometry3d& Ta, Eigen::Affin
   {
     for (int j = 0; j < Ra.cols(); ++j)
     {
-      if (abs(Ra(i, j) - Rb(i, j)) > TOLERANCE)
+      if (std::abs(Ra(i, j) - Rb(i, j)) > TOLERANCE)
       {
         ROS_ERROR_NAMED("opw", "Pose orientation error on element (%d, %d).", i, j);
         ROS_ERROR_NAMED("opw", "opw: %f, moveit: %f.", Ra(i, j), Rb(i, j));
@@ -213,7 +216,7 @@ bool MoveItOPWKinematicsPlugin::comparePoses(Eigen::Isometry3d& Ta, Eigen::Affin
   auto pb = Tb.translation();
   for (int i = 0; i < 3; ++i)
   {
-    if (abs(pa(i) - pb(i)) > TOLERANCE)
+    if (std::abs(pa(i) - pb(i)) > TOLERANCE)
     {
       ROS_ERROR_NAMED("opw", "Pose position error on element (%d).", i);
       ROS_ERROR_NAMED("opw", "opw: %f, moveit: %f.", pa(i), pb(i));
