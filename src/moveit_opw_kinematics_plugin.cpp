@@ -1,6 +1,9 @@
 #include <class_loader/class_loader.hpp>
 #include <moveit_opw_kinematics_plugin/moveit_opw_kinematics_plugin.h>
 
+// abs
+#include <cstdlib>
+
 // URDF, SRDF
 #include <srdfdom/model.h>
 #include <urdf_model/model.h>
@@ -116,6 +119,13 @@ bool MoveItOPWKinematicsPlugin::initialize(const std::string& robot_description,
     return false;
   }
 
+  // check geometric parameters for opw model
+  if (!selfTest())
+  {
+    ROS_ERROR_STREAM_NAMED("opw", "The opw parameters loaded from kinematics.yaml appear to be incorrect.");
+    return false;
+  }
+
   active_ = true;
   ROS_DEBUG_NAMED("opw", "ROS service-based kinematics solver initialized");
   return true;
@@ -160,6 +170,60 @@ int MoveItOPWKinematicsPlugin::getJointIndex(const std::string& name) const
 bool MoveItOPWKinematicsPlugin::timedOut(const ros::WallTime& start_time, double duration) const
 {
   return ((ros::WallTime::now() - start_time).toSec() >= duration);
+}
+
+bool MoveItOPWKinematicsPlugin::selfTest()
+{
+  const std::vector<double> joint_angles = { 0.1, -0.1, 0.2, -0.3, 0.5, -0.8 };
+
+  auto fk_pose_opw = opw_kinematics::forward(opw_parameters_, &joint_angles[0]);
+  robot_state_->setJointGroupPositions(joint_model_group_, joint_angles);
+  auto fk_pose_moveit = robot_state_->getGlobalLinkTransform(tip_frames_[0]);
+  // group/robot might not be at origin, subtract base transform
+  auto base = robot_state_->getGlobalLinkTransform(base_frame_);
+  fk_pose_moveit = base.inverse() * fk_pose_moveit;
+
+  if (!comparePoses(fk_pose_opw, fk_pose_moveit))
+  {
+    return false;
+  }
+
+  // reset robot state
+  robot_state_->setToDefaultValues();
+  return true;
+}
+
+bool MoveItOPWKinematicsPlugin::comparePoses(Eigen::Isometry3d& Ta, Eigen::Affine3d& Tb)
+{
+  const float TOLERANCE = 1e-6;
+
+  auto Ra = Ta.rotation();
+  auto Rb = Tb.rotation();
+  for (int i = 0; i < Ra.rows(); ++i)
+  {
+    for (int j = 0; j < Ra.cols(); ++j)
+    {
+      if (std::abs(Ra(i, j) - Rb(i, j)) > TOLERANCE)
+      {
+        ROS_ERROR_NAMED("opw", "Pose orientation error on element (%d, %d).", i, j);
+        ROS_ERROR_NAMED("opw", "opw: %f, moveit: %f.", Ra(i, j), Rb(i, j));
+        return false;
+      }
+    }
+  }
+
+  auto pa = Ta.translation();
+  auto pb = Tb.translation();
+  for (int i = 0; i < 3; ++i)
+  {
+    if (std::abs(pa(i) - pb(i)) > TOLERANCE)
+    {
+      ROS_ERROR_NAMED("opw", "Pose position error on element (%d).", i);
+      ROS_ERROR_NAMED("opw", "opw: %f, moveit: %f.", pa(i), pb(i));
+      return false;
+    }
+  }
+  return true;
 }
 
 bool MoveItOPWKinematicsPlugin::getPositionIK(const geometry_msgs::Pose& ik_pose,

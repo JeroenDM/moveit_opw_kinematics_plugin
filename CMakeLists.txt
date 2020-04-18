@@ -111,4 +111,24 @@ if(CATKIN_ENABLE_TESTING)
     ${catkin_LIBRARIES}
     ${MOVEIT_LIB_NAME}
   )
+
+  add_rostest_gtest(${PROJECT_NAME}_test_fanuc_faulty
+    test/test_fanuc_faulty_params.rostest
+    test/test_faulty_params.cpp
+  )
+  target_link_libraries(${PROJECT_NAME}_test_fanuc_faulty
+    gtest
+    ${catkin_LIBRARIES}
+    ${MOVEIT_LIB_NAME}
+  )
+
+  add_rostest_gtest(${PROJECT_NAME}_test_kuka_faulty
+    test/test_kuka_faulty_params.rostest
+    test/test_faulty_params.cpp
+  )
+  target_link_libraries(${PROJECT_NAME}_test_kuka_faulty
+    gtest
+    ${catkin_LIBRARIES}
+    ${MOVEIT_LIB_NAME}
+  )
 endif()
