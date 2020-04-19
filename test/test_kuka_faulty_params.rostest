@@ -5,6 +5,7 @@
   <arg name="load_robot_description" value="true"/>
 </include>
 
+<!-- Overwrite the default opw parameters loaded by planning_context.launch. -->
 <rosparam command="load" file="$(find moveit_opw_kinematics_plugin)/test/faulty_kinematics_kuka.yaml" />
 <param name="tip_link" value="tool0" />
 <param name="root_link" value="base_link" />
