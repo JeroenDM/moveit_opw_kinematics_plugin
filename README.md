@@ -20,7 +20,7 @@ And also add a [moveit configuration](http://docs.ros.org/kinetic/api/moveit_tut
 ```yaml
 manipulator:
   kinematics_solver: moveit_opw_kinematics_plugin/MoveItOPWKinematicsPlugin
-  kinematics_solver_geometric_parameters:
+  opw_kinematics_geometric_parameters:
     a1:  0.025
     a2: -0.035
     b:   0.000
@@ -28,6 +28,6 @@ manipulator:
     c2:  0.315
     c3:  0.365
     c4:  0.080
-  kinematics_solver_joint_offsets: [0.0, -1.57079632679, 0, 0, 0, 0]
-  kinematics_solver_joint_sign_corrections: [-1, 1, 1, -1, 1, -1]
+  opw_kinematics_joint_offsets: [0.0, -1.57079632679, 0, 0, 0, 0]
+  opw_kinematics_joint_sign_corrections: [-1, 1, 1, -1, 1, -1]
 ```
