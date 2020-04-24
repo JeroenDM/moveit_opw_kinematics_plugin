@@ -14,7 +14,7 @@
   <!-- <url type="website">http://wiki.ros.org/opw_kinematics_plugin</url> -->
 
   <author>Jeroen De Maeyer</author>
-  <author>Simon Schmeisser</author>
+  <author>Simon Schmeisser (isys vision)</author>
   <author>G.A. vd. Hoorn (TU Delft Robotics Institute)</author>
 
   <buildtool_depend>catkin</buildtool_depend>
