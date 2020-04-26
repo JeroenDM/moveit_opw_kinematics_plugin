@@ -55,7 +55,6 @@ add_library(${MOVEIT_LIB_NAME}
 
 target_link_libraries(${MOVEIT_LIB_NAME}
   ${catkin_LIBRARIES}
-  opw_kinematics::opw_kinematics
 )
 
 #############
