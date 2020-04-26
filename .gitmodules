@@ -1,0 +1,3 @@
+[submodule "external/opw_kinematics"]
+	path = external/opw_kinematics
+	url = https://github.com/Jmeyer1292/opw_kinematics.git
