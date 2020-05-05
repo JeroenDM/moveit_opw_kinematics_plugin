@@ -497,22 +497,22 @@ bool MoveItOPWKinematicsPlugin::setOPWParameters()
 
   ros::NodeHandle nh;
 
-  std::map<std::string, double> geometric_parameters, dummy;
-  if (!lookupParam("opw_kinematics_geometric_parameters", geometric_parameters, dummy))
+  std::map<std::string, double> geometric_parameters;
+  if (!lookupParam("opw_kinematics_geometric_parameters", geometric_parameters, {}))
   {
     ROS_ERROR_STREAM("Failed to load geometric parameters for ik solver.");
     return false;
   }
 
-  std::vector<double> joint_offsets, dummy2;
-  if (!lookupParam("opw_kinematics_joint_offsets", joint_offsets, dummy2))
+  std::vector<double> joint_offsets;
+  if (!lookupParam("opw_kinematics_joint_offsets", joint_offsets, {}))
   {
     ROS_ERROR_STREAM("Failed to load joint offsets for ik solver.");
     return false;
   }
 
-  std::vector<int> joint_sign_corrections, dummy3;
-  if (!lookupParam("opw_kinematics_joint_sign_corrections", joint_sign_corrections, dummy3))
+  std::vector<int> joint_sign_corrections;
+  if (!lookupParam("opw_kinematics_joint_sign_corrections", joint_sign_corrections, {}))
   {
     ROS_ERROR_STREAM("Failed to load joint sign corrections for ik solver.");
     return false;
