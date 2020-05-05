@@ -525,6 +525,20 @@ bool MoveItOPWKinematicsPlugin::setOPWParameters()
   opw_parameters_.c2 = geometric_parameters["c2"];
   opw_parameters_.c3 = geometric_parameters["c3"];
   opw_parameters_.c4 = geometric_parameters["c4"];
+
+  if (joint_offsets.size() != 6)
+  {
+    ROS_ERROR_STREAM("Expected joint_offsets to contain 6 elements, but it has " << joint_offsets.size() << ".");
+    return false;
+  }
+
+  if (joint_sign_corrections.size() != 6)
+  {
+    ROS_ERROR_STREAM("Expected joint_sign_corrections to contain 6 elements, but it has "
+                     << joint_sign_corrections.size() << ".");
+    return false;
+  }
+
   for (std::size_t i = 0; i < joint_offsets.size(); ++i)
   {
     opw_parameters_.offsets[i] = joint_offsets[i];
