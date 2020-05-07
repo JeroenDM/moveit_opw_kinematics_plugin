@@ -61,9 +61,9 @@ bool MoveItOPWKinematicsPlugin::initialize(const moveit::core::RobotModel& robot
                                    << ". Mimic Joint Models: " << joint_model_group_->getMimicJointModels().size());
 
   // Copy joint names
-  for (std::size_t i = 0; i < joint_model_group_->getJointModels().size(); ++i)
+  for (std::size_t i = 0; i < joint_model_group_->getActiveJointModels().size(); ++i)
   {
-    ik_group_info_.joint_names.push_back(joint_model_group_->getJointModelNames()[i]);
+    ik_group_info_.joint_names.push_back(joint_model_group_->getActiveJointModelNames()[i]);
   }
 
   if (debug)
