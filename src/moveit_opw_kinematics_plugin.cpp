@@ -538,7 +538,7 @@ bool MoveItOPWKinematicsPlugin::setOPWParameters()
   return true;
 }
 
-double MoveItOPWKinematicsPlugin::distance(const std::vector<double>& a, const std::vector<double>& b) const
+double MoveItOPWKinematicsPlugin::distance(const std::vector<double>& a, const std::vector<double>& b)
 {
   double cost = 0.0;
   for (size_t i = 0; i < a.size(); ++i)
@@ -548,7 +548,7 @@ double MoveItOPWKinematicsPlugin::distance(const std::vector<double>& a, const s
 
 // Compute the index of the closest joint pose in 'candidates' from 'target'
 std::size_t MoveItOPWKinematicsPlugin::closestJointPose(const std::vector<double>& target,
-                                                        const std::vector<std::vector<double>>& candidates) const
+                                                        const std::vector<std::vector<double>>& candidates)
 {
   size_t closest = 0;  // index into candidates
   double lowest_cost = std::numeric_limits<double>::max();
