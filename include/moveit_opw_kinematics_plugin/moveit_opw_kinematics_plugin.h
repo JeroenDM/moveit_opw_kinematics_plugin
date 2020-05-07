@@ -32,7 +32,6 @@ using kinematics::KinematicsResult;
 class MoveItOPWKinematicsPlugin : public kinematics::KinematicsBase
 {
 public:
-
   // struct for storing and sorting solutions
   struct LimitObeyingSol
   {
@@ -136,9 +135,9 @@ private:
 
   bool setOPWParameters();
 
-  double distance(const std::vector<double>& a, const std::vector<double>& b) const;
-  std::size_t closestJointPose(const std::vector<double>& target,
-                               const std::vector<std::vector<double>>& candidates) const;
+  static double distance(const std::vector<double>& a, const std::vector<double>& b);
+  static std::size_t closestJointPose(const std::vector<double>& target,
+                               const std::vector<std::vector<double>>& candidates);
   bool getAllIK(const Eigen::Affine3d& pose, std::vector<std::vector<double>>& joint_poses) const;
   bool getIK(const Eigen::Affine3d& pose, const std::vector<double>& seed_state, std::vector<double>& joint_pose) const;
 
