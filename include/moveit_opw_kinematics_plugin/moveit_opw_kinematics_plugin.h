@@ -40,32 +40,32 @@ public:
   virtual bool
   getPositionIK(const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state,
                 std::vector<double>& solution, moveit_msgs::MoveItErrorCodes& error_code,
-                const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const;
+                const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const override;
 
   virtual bool
   searchPositionIK(const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state, double timeout,
                    std::vector<double>& solution, moveit_msgs::MoveItErrorCodes& error_code,
-                   const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const;
+                   const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const override;
 
   virtual bool
   searchPositionIK(const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state, double timeout,
                    const std::vector<double>& consistency_limits, std::vector<double>& solution,
                    moveit_msgs::MoveItErrorCodes& error_code,
-                   const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const;
+                   const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const override;
 
   virtual bool searchPositionIK(
       const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state, double timeout,
       std::vector<double>& solution, const IKCallbackFn& solution_callback, moveit_msgs::MoveItErrorCodes& error_code,
-      const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const;
+      const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const override;
 
   virtual bool
   searchPositionIK(const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state, double timeout,
                    const std::vector<double>& consistency_limits, std::vector<double>& solution,
                    const IKCallbackFn& solution_callback, moveit_msgs::MoveItErrorCodes& error_code,
-                   const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const;
+                   const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const override;
 
   virtual bool getPositionFK(const std::vector<std::string>& link_names, const std::vector<double>& joint_angles,
-                             std::vector<geometry_msgs::Pose>& poses) const;
+                             std::vector<geometry_msgs::Pose>& poses) const override;
 
   virtual bool initialize(const moveit::core::RobotModel& robot_model, const std::string& group_name,
                           const std::string& base_frame, const std::vector<std::string>& tip_frames,
@@ -74,12 +74,12 @@ public:
   /**
    * @brief  Return all the joint names in the order they are used internally
    */
-  const std::vector<std::string>& getJointNames() const;
+  const std::vector<std::string>& getJointNames() const override;
 
   /**
    * @brief  Return all the link names in the order they are represented internally
    */
-  const std::vector<std::string>& getLinkNames() const;
+  const std::vector<std::string>& getLinkNames() const override;
 
   /**
    * @brief  Return all the variable names in the order they are represented internally
@@ -89,7 +89,7 @@ public:
   virtual bool
   getPositionIK(const std::vector<geometry_msgs::Pose>& ik_poses, const std::vector<double>& ik_seed_state,
                 std::vector<std::vector<double>>& solutions, KinematicsResult& result,
-                const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const;
+                const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const override;
 
 protected:
   virtual bool
@@ -104,7 +104,7 @@ protected:
                    const IKCallbackFn& solution_callback, moveit_msgs::MoveItErrorCodes& error_code,
                    const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const;
 
-  virtual bool setRedundantJoints(const std::vector<unsigned int>& redundant_joint_indices);
+  virtual bool setRedundantJoints(const std::vector<unsigned int>& redundant_joint_indices) override;
 
 private:
   bool timedOut(const ros::WallTime& start_time, double duration) const;
