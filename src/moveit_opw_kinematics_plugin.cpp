@@ -359,7 +359,7 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs
   std::vector<std::vector<double>> solutions;
   if (!getAllIK(pose, solutions))
   {
-    ROS_INFO_STREAM_NAMED("opw", "Failed to find IK solution");
+    ROS_DEBUG_STREAM_NAMED("opw", "Failed to find IK solution");
     error_code.val = error_code.NO_IK_SOLUTION;
     return false;
   }
@@ -387,7 +387,7 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs
 
   if (limit_obeying_solutions.empty())
   {
-    ROS_INFO_NAMED("opw", "None of the solutions is within joint limits");
+    ROS_DEBUG_NAMED("opw", "None of the solutions is within joint limits");
     return false;
   }
 
@@ -413,7 +413,7 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs
     }
   }
 
-  ROS_INFO_STREAM_NAMED("opw", "No solution fullfilled requirements of solution callback");
+  ROS_DEBUG_STREAM_NAMED("opw", "No solution fullfilled requirements of solution callback");
   return false;
 }
 
