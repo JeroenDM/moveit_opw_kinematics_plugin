@@ -32,6 +32,8 @@ using kinematics::KinematicsResult;
 class MoveItOPWKinematicsPlugin : public kinematics::KinematicsBase
 {
 public:
+  friend class MoveItOPWRailedKinematicsPlugin;
+
   // struct for storing and sorting solutions
   struct LimitObeyingSol
   {
