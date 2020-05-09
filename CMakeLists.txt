@@ -10,7 +10,6 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   eigen_conversions
   moveit_core
-  moveit_ros_planning
   roscpp
   pluginlib
 )
@@ -89,8 +88,10 @@ install(
 #############
 
 if(CATKIN_ENABLE_TESTING)
+  find_package(moveit_ros_planning REQUIRED)
   find_package(rostest REQUIRED)
-  include_directories(test)
+
+  include_directories(test ${moveit_ros_planning_INCLUDE_DIRS})
   
   add_rostest_gtest(${PROJECT_NAME}_test_kuka
     test/test_kuka.rostest test/test_plugin.cpp
@@ -98,6 +99,7 @@ if(CATKIN_ENABLE_TESTING)
   )
   target_link_libraries(${PROJECT_NAME}_test_kuka
     gtest
+    ${moveit_ros_planning_LIBRARIES}
     ${catkin_LIBRARIES}
     ${MOVEIT_LIB_NAME}
   )
@@ -108,6 +110,7 @@ if(CATKIN_ENABLE_TESTING)
   )
   target_link_libraries(${PROJECT_NAME}_test_fanuc
     gtest
+    ${moveit_ros_planning_LIBRARIES}
     ${catkin_LIBRARIES}
     ${MOVEIT_LIB_NAME}
   )
@@ -118,6 +121,7 @@ if(CATKIN_ENABLE_TESTING)
   )
   target_link_libraries(${PROJECT_NAME}_test_fanuc_faulty
     gtest
+    ${moveit_ros_planning_LIBRARIES}
     ${catkin_LIBRARIES}
     ${MOVEIT_LIB_NAME}
   )
@@ -128,6 +132,7 @@ if(CATKIN_ENABLE_TESTING)
   )
   target_link_libraries(${PROJECT_NAME}_test_kuka_faulty
     gtest
+    ${moveit_ros_planning_LIBRARIES}
     ${catkin_LIBRARIES}
     ${MOVEIT_LIB_NAME}
   )
