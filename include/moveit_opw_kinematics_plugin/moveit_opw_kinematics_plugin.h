@@ -32,6 +32,18 @@ using kinematics::KinematicsResult;
 class MoveItOPWKinematicsPlugin : public kinematics::KinematicsBase
 {
 public:
+  // struct for storing and sorting solutions
+  struct LimitObeyingSol
+  {
+    std::vector<double> value;
+    double dist_from_seed;
+
+    bool operator<(const LimitObeyingSol& a) const
+    {
+      return dist_from_seed < a.dist_from_seed;
+    }
+  };
+
   /**
    *  @brief Default constructor
    */
@@ -40,35 +52,35 @@ public:
   virtual bool
   getPositionIK(const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state,
                 std::vector<double>& solution, moveit_msgs::MoveItErrorCodes& error_code,
-                const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const;
+                const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const override;
 
   virtual bool
   searchPositionIK(const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state, double timeout,
                    std::vector<double>& solution, moveit_msgs::MoveItErrorCodes& error_code,
-                   const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const;
+                   const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const override;
 
   virtual bool
   searchPositionIK(const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state, double timeout,
                    const std::vector<double>& consistency_limits, std::vector<double>& solution,
                    moveit_msgs::MoveItErrorCodes& error_code,
-                   const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const;
+                   const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const override;
 
   virtual bool searchPositionIK(
       const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state, double timeout,
       std::vector<double>& solution, const IKCallbackFn& solution_callback, moveit_msgs::MoveItErrorCodes& error_code,
-      const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const;
+      const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const override;
 
   virtual bool
   searchPositionIK(const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state, double timeout,
                    const std::vector<double>& consistency_limits, std::vector<double>& solution,
                    const IKCallbackFn& solution_callback, moveit_msgs::MoveItErrorCodes& error_code,
-                   const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const;
+                   const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const override;
 
   virtual bool getPositionFK(const std::vector<std::string>& link_names, const std::vector<double>& joint_angles,
-                             std::vector<geometry_msgs::Pose>& poses) const;
+                             std::vector<geometry_msgs::Pose>& poses) const override;
 
   virtual bool initialize(const std::string& robot_description, const std::string& group_name,
-                          const std::string& base_name, const std::string& tip_frame, double search_discretization)
+                          const std::string& base_name, const std::string& tip_frame, double search_discretization) override
   {
     std::vector<std::string> tip_frames;
     tip_frames.push_back(tip_frame);
@@ -77,17 +89,17 @@ public:
 
   virtual bool initialize(const std::string& robot_description, const std::string& group_name,
                           const std::string& base_name, const std::vector<std::string>& tip_frames,
-                          double search_discretization);
+                          double search_discretization) override;
 
   /**
    * @brief  Return all the joint names in the order they are used internally
    */
-  const std::vector<std::string>& getJointNames() const;
+  const std::vector<std::string>& getJointNames() const override;
 
   /**
    * @brief  Return all the link names in the order they are represented internally
    */
-  const std::vector<std::string>& getLinkNames() const;
+  const std::vector<std::string>& getLinkNames() const override;
 
   /**
    * @brief  Return all the variable names in the order they are represented internally
@@ -97,7 +109,7 @@ public:
   virtual bool
   getPositionIK(const std::vector<geometry_msgs::Pose>& ik_poses, const std::vector<double>& ik_seed_state,
                 std::vector<std::vector<double>>& solutions, KinematicsResult& result,
-                const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const;
+                const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const override;
 
 protected:
   virtual bool
@@ -112,7 +124,7 @@ protected:
                    const IKCallbackFn& solution_callback, moveit_msgs::MoveItErrorCodes& error_code,
                    const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const;
 
-  virtual bool setRedundantJoints(const std::vector<unsigned int>& redundant_joint_indices);
+  virtual bool setRedundantJoints(const std::vector<unsigned int>& redundant_joint_indices) override;
 
 private:
   bool timedOut(const ros::WallTime& start_time, double duration) const;
@@ -123,9 +135,9 @@ private:
 
   bool setOPWParameters();
 
-  double distance(const std::vector<double>& a, const std::vector<double>& b) const;
-  std::size_t closestJointPose(const std::vector<double>& target,
-                               const std::vector<std::vector<double>>& candidates) const;
+  static double distance(const std::vector<double>& a, const std::vector<double>& b);
+  static std::size_t closestJointPose(const std::vector<double>& target,
+                               const std::vector<std::vector<double>>& candidates);
   bool getAllIK(const Eigen::Affine3d& pose, std::vector<std::vector<double>>& joint_poses) const;
   bool getIK(const Eigen::Affine3d& pose, const std::vector<double>& seed_state, std::vector<double>& joint_pose) const;
 

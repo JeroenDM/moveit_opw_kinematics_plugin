@@ -79,9 +79,9 @@ bool MoveItOPWKinematicsPlugin::initialize(const std::string& robot_description,
                                    << ". Mimic Joint Models: " << joint_model_group_->getMimicJointModels().size());
 
   // Copy joint names
-  for (std::size_t i = 0; i < joint_model_group_->getJointModels().size(); ++i)
+  for (std::size_t i = 0; i < joint_model_group_->getActiveJointModels().size(); ++i)
   {
-    ik_group_info_.joint_names.push_back(joint_model_group_->getJointModelNames()[i]);
+    ik_group_info_.joint_names.push_back(joint_model_group_->getActiveJointModelNames()[i]);
   }
 
   if (debug)
@@ -300,18 +300,6 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const geometry_msgs::Pose& ik_p
                           options);
 }
 
-// struct for storing and sorting solutions
-struct LimitObeyingSol
-{
-  std::vector<double> value;
-  double dist_from_seed;
-
-  bool operator<(const LimitObeyingSol& a) const
-  {
-    return dist_from_seed < a.dist_from_seed;
-  }
-};
-
 bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs::Pose>& ik_poses,
                                                  const std::vector<double>& ik_seed_state, double /*timeout*/,
                                                  const std::vector<double>& /*consistency_limits*/,
@@ -351,7 +339,7 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs
   std::vector<std::vector<double>> solutions;
   if (!getAllIK(pose, solutions))
   {
-    ROS_INFO_STREAM_NAMED("opw", "Failed to find IK solution");
+    ROS_DEBUG_STREAM_NAMED("opw", "Failed to find IK solution");
     error_code.val = error_code.NO_IK_SOLUTION;
     return false;
   }
@@ -372,7 +360,7 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs
 
   if (limit_obeying_solutions.empty())
   {
-    ROS_INFO_NAMED("opw", "None of the solutions is within joint limits");
+    ROS_DEBUG_NAMED("opw", "None of the solutions is within joint limits");
     return false;
   }
 
@@ -398,7 +386,7 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs
     }
   }
 
-  ROS_INFO_STREAM_NAMED("opw", "No solution fullfilled requirements of solution callback");
+  ROS_DEBUG_STREAM_NAMED("opw", "No solution fullfilled requirements of solution callback");
   return false;
 }
 
@@ -509,7 +497,7 @@ bool MoveItOPWKinematicsPlugin::setOPWParameters()
   return true;
 }
 
-double MoveItOPWKinematicsPlugin::distance(const std::vector<double>& a, const std::vector<double>& b) const
+double MoveItOPWKinematicsPlugin::distance(const std::vector<double>& a, const std::vector<double>& b)
 {
   double cost = 0.0;
   for (size_t i = 0; i < a.size(); ++i)
@@ -519,7 +507,7 @@ double MoveItOPWKinematicsPlugin::distance(const std::vector<double>& a, const s
 
 // Compute the index of the closest joint pose in 'candidates' from 'target'
 std::size_t MoveItOPWKinematicsPlugin::closestJointPose(const std::vector<double>& target,
-                                                        const std::vector<std::vector<double>>& candidates) const
+                                                        const std::vector<std::vector<double>>& candidates)
 {
   size_t closest = 0;  // index into candidates
   double lowest_cost = std::numeric_limits<double>::max();
