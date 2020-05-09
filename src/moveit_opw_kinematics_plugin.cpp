@@ -458,22 +458,22 @@ bool MoveItOPWKinematicsPlugin::setOPWParameters()
 
   ros::NodeHandle nh;
 
-  std::map<std::string, double> geometric_parameters, dummy;
-  if (!lookupParam("opw_kinematics_geometric_parameters", geometric_parameters, dummy))
+  std::map<std::string, double> geometric_parameters;
+  if (!lookupParam("opw_kinematics_geometric_parameters", geometric_parameters, {}))
   {
     ROS_ERROR_STREAM("Failed to load geometric parameters for ik solver.");
     return false;
   }
 
-  std::vector<double> joint_offsets, dummy2;
-  if (!lookupParam("opw_kinematics_joint_offsets", joint_offsets, dummy2))
+  std::vector<double> joint_offsets;
+  if (!lookupParam("opw_kinematics_joint_offsets", joint_offsets, {}))
   {
     ROS_ERROR_STREAM("Failed to load joint offsets for ik solver.");
     return false;
   }
 
-  std::vector<int> joint_sign_corrections, dummy3;
-  if (!lookupParam("opw_kinematics_joint_sign_corrections", joint_sign_corrections, dummy3))
+  std::vector<int> joint_sign_corrections;
+  if (!lookupParam("opw_kinematics_joint_sign_corrections", joint_sign_corrections, {}))
   {
     ROS_ERROR_STREAM("Failed to load joint sign corrections for ik solver.");
     return false;
@@ -486,6 +486,20 @@ bool MoveItOPWKinematicsPlugin::setOPWParameters()
   opw_parameters_.c2 = geometric_parameters["c2"];
   opw_parameters_.c3 = geometric_parameters["c3"];
   opw_parameters_.c4 = geometric_parameters["c4"];
+
+  if (joint_offsets.size() != 6)
+  {
+    ROS_ERROR_STREAM("Expected joint_offsets to contain 6 elements, but it has " << joint_offsets.size() << ".");
+    return false;
+  }
+
+  if (joint_sign_corrections.size() != 6)
+  {
+    ROS_ERROR_STREAM("Expected joint_sign_corrections to contain 6 elements, but it has "
+                     << joint_sign_corrections.size() << ".");
+    return false;
+  }
+
   for (std::size_t i = 0; i < joint_offsets.size(); ++i)
   {
     opw_parameters_.offsets[i] = joint_offsets[i];
