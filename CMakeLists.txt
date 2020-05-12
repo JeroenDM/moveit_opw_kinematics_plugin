@@ -15,8 +15,6 @@ find_package(catkin REQUIRED COMPONENTS
   pluginlib
 )
 
-find_package(opw_kinematics REQUIRED)
-
 set(MOVEIT_LIB_NAME moveit_opw_kinematics_plugin)
 
 # System dependencies are found with CMake's conventions
@@ -32,10 +30,7 @@ find_package(Boost REQUIRED COMPONENTS filesystem)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
   LIBRARIES ${MOVEIT_LIB_NAME}
-#  CATKIN_DEPENDS moveit_core moveit_ros_planning roscpp
-#  DEPENDS system_lib
 )
 
 ###########
@@ -47,6 +42,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
   include
+  external/opw_kinematics/include
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -57,7 +53,6 @@ add_library(${MOVEIT_LIB_NAME}
 
 target_link_libraries(${MOVEIT_LIB_NAME}
   ${catkin_LIBRARIES}
-  opw_kinematics::opw_kinematics
 )
 
 #############
@@ -69,13 +64,6 @@ install(TARGETS ${MOVEIT_LIB_NAME}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-# Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  FILES_MATCHING PATTERN "*.h"
-  PATTERN ".svn" EXCLUDE
 )
 
 install(
