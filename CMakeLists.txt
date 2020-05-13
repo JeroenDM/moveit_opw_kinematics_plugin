@@ -79,6 +79,7 @@ install(
 if(CATKIN_ENABLE_TESTING)
   find_package(moveit_ros_planning REQUIRED)
   find_package(rostest REQUIRED)
+  find_package(kuka_test_resources REQUIRED)
 
   include_directories(test ${moveit_ros_planning_INCLUDE_DIRS})
   

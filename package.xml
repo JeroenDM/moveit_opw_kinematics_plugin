@@ -39,6 +39,7 @@
   <test_depend>rostest</test_depend>
   <test_depend>moveit_resources</test_depend>
   <test_depend>moveit_ros_planning</test_depend>
+  <test_depend>kuka_test_resources</test_depend>
 
   <export>
     <moveit_core plugin="${prefix}/moveit_opw_kinematics_plugin_description.xml"/>
