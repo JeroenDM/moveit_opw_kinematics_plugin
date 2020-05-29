@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/JeroenDM/moveit_opw_kinematics_plugin.svg?branch=melodic-devel)](https://travis-ci.org/JeroenDM/moveit_opw_kinematics_plugin)
 
-This is a [MoveIt!](https://moveit.ros.org/) plugin for [opw_kinematics](https://github.com/Jmeyer1292/opw_kinematics). The package calculates closed form inverse kinematic solutions for typical industrial robots and was created by [Jmeyer1292](https://github.com/Jmeyer1292). For compatible robots, this plugin is a lightweight alternative for the [ikfast plugin](https://github.com/ros-planning/moveit/tree/kinetic-devel/moveit_kinematics/ikfast_kinematics_plugin).
+This is a [MoveIt](https://moveit.ros.org/) plugin for [opw_kinematics](https://github.com/Jmeyer1292/opw_kinematics). The package calculates closed form inverse kinematic solutions for typical industrial robots and was created by [Jmeyer1292](https://github.com/Jmeyer1292). For compatible robots, this plugin is a lightweight alternative for the [ikfast plugin](https://github.com/ros-planning/moveit/tree/kinetic-devel/moveit_kinematics/ikfast_kinematics_plugin).
 
 ## Getting started
 To use this plugin with another robot, clone this package inside your workspace:

@@ -20,7 +20,7 @@ const std::string ROBOT_DESCRIPTION = "robot_description";
 // unused dummy value for kinematics solver instance
 const double DEFAULT_SEARCH_DISCRETIZATION = 0.01f;
 
-/** \Brief Check ik of opw_kinematics against fk of MoveIt! kinematics.
+/** \Brief Check ik of opw_kinematics against fk of MoveIt kinematics.
  *
  *  In this test fixure the aim is to calculate inverse kinematics using opw_kinematics
  *  inside the plugin and check this using robot_state.getGlobalLinkTransform("tip_link").
