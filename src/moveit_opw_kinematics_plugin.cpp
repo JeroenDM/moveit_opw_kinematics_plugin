@@ -84,12 +84,6 @@ bool MoveItOPWKinematicsPlugin::initialize(const moveit::core::RobotModel& robot
     ik_group_info_.link_names.push_back(tip_frames_[i]);
   }
 
-  // Choose what ROS service to send IK requests to
-  ROS_DEBUG_STREAM_NAMED("opw", "Looking for ROS service name on rosparam server with param: "
-                                    << "/kinematics_solver_service_name");
-  std::string ik_service_name;
-  lookupParam("kinematics_solver_service_name", ik_service_name, std::string("solve_ik"));
-
   // Setup the joint state groups that we need
   robot_state_.reset(new robot_state::RobotState(robot_model_));
   robot_state_->setToDefaultValues();
@@ -109,7 +103,7 @@ bool MoveItOPWKinematicsPlugin::initialize(const moveit::core::RobotModel& robot
   }
 
   active_ = true;
-  ROS_DEBUG_NAMED("opw", "ROS service-based kinematics solver initialized");
+  ROS_DEBUG_NAMED("opw", "OPW kinematics solver initialized");
   return true;
 }
 
