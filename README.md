@@ -12,7 +12,7 @@ Some functions are directly copied from the package [descartes_opw_model](https:
 To use this plugin with another robot, clone this package inside your workspace:
 ```bash
 cd catkin_ws/src/
-git clone https://github.com/JeroenDM/moveit_opw_kinematics_plugin.git
+git clone --recursive https://github.com/JeroenDM/moveit_opw_kinematics_plugin.git
 ```
 
 And also add a [moveit configuration](http://docs.ros.org/kinetic/api/moveit_tutorials/html/doc/setup_assistant/setup_assistant_tutorial.html) for a compatible robot. You have to update the config/kinematics.yaml file. It looks like this for a Kuka kr6r700:
