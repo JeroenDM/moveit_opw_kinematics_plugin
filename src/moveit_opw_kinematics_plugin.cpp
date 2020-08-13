@@ -91,14 +91,16 @@ bool MoveItOPWKinematicsPlugin::initialize(const moveit::core::RobotModel& robot
   // set geometric parameters for opw model
   if (!setOPWParameters())
   {
-    ROS_ERROR_STREAM_NAMED("opw", "Could not load opw parameters. Check kinematics.yaml.");
+    ROS_ERROR_STREAM_NAMED("opw", "Could not load OPW parameters. Please make "
+      "sure they are loaded on the parameter server and are of the correct type(s).");
     return false;
   }
 
   // check geometric parameters for opw model
   if (!selfTest())
   {
-    ROS_ERROR_STREAM_NAMED("opw", "The opw parameters loaded from kinematics.yaml appear to be incorrect.");
+    ROS_ERROR_STREAM_NAMED("opw", "The OPW parameters loaded from the parameter "
+      "server appear to be incorrect (self-test failed).");
     return false;
   }
 
