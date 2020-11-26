@@ -37,7 +37,7 @@
   <exec_depend>pluginlib</exec_depend>
 
   <test_depend>rostest</test_depend>
-  <test_depend>moveit_resources</test_depend>
+  <test_depend>moveit_resources_fanuc_moveit_config</test_depend>
   <test_depend>moveit_ros_planning</test_depend>
 
   <export>
