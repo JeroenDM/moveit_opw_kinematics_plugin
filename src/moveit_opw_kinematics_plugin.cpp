@@ -10,7 +10,7 @@
 // Eigen
 #include <Eigen/Core>
 #include <Eigen/Geometry>
-// #include <eigen_conversions/eigen_msg.h>
+// #include <eigen_conversions/eigen_msg.h> // TODO replace this with tf2
 
 // OPW kinematics
 // OPW kinematics
@@ -19,6 +19,7 @@
 #include "opw_kinematics/opw_utilities.h"
 
 // register OPWKinematics as a KinematicsBase implementation
+#include <class_loader/class_loader.hpp>
 CLASS_LOADER_REGISTER_CLASS(moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin, kinematics::KinematicsBase)
 
 namespace moveit_opw_kinematics_plugin
