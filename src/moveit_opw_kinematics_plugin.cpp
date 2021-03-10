@@ -1,4 +1,4 @@
-#include <class_loader/class_loader.hpp>
+// #include <class_loader/class_loader.hpp>
 #include <moveit_opw_kinematics_plugin/moveit_opw_kinematics_plugin.h>
 
 #include <moveit/kinematics_base/kinematics_base.h>
@@ -10,7 +10,7 @@
 // Eigen
 #include <Eigen/Core>
 #include <Eigen/Geometry>
-#include <eigen_conversions/eigen_msg.h>
+// #include <eigen_conversions/eigen_msg.h>
 
 // OPW kinematics
 #include "opw_kinematics/opw_io.h"
@@ -18,7 +18,7 @@
 #include "opw_kinematics/opw_utilities.h"
 
 // register OPWKinematics as a KinematicsBase implementation
-CLASS_LOADER_REGISTER_CLASS(moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin, kinematics::KinematicsBase)
+// CLASS_LOADER_REGISTER_CLASS(moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin, kinematics::KinematicsBase)
 
 namespace moveit_opw_kinematics_plugin
 {

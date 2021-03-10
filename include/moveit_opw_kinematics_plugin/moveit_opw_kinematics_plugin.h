@@ -2,17 +2,17 @@
 #define MOVEIT_OPW_KINEMATICS_PLUGIN_
 
 // ROS
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 
 // System
 #include <memory>
 
 // ROS msgs
-#include <geometry_msgs/PoseStamped.h>
-#include <moveit_msgs/GetPositionFK.h>
-#include <moveit_msgs/GetPositionIK.h>
-#include <moveit_msgs/KinematicSolverInfo.h>
-#include <moveit_msgs/MoveItErrorCodes.h>
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <moveit_msgs/srv/get_position_fk.hpp>
+#include <moveit_msgs/srv/get_position_ik.hpp>
+#include <moveit_msgs/msg/kinematic_solver_info.hpp>
+#include <moveit_msgs/msg/move_it_error_codes.hpp>
 
 // MoveIt!
 #include <moveit/kinematics_base/kinematics_base.h>
