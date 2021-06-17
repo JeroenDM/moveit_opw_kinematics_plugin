@@ -6,6 +6,7 @@
 
 // abs
 #include <cstdlib>
+#include <algorithm>  // copy
 
 // Eigen
 #include <Eigen/Core>
@@ -92,7 +93,7 @@ bool MoveItOPWKinematicsPlugin::initialize(const moveit::core::RobotModel& robot
   if (!setOPWParameters())
   {
     ROS_ERROR_STREAM_NAMED("opw", "Could not load OPW parameters. Please make "
-      "sure they are loaded on the parameter server and are of the correct type(s).");
+                                  "sure they are loaded on the parameter server and are of the correct type(s).");
     return false;
   }
 
@@ -100,7 +101,7 @@ bool MoveItOPWKinematicsPlugin::initialize(const moveit::core::RobotModel& robot
   if (!selfTest())
   {
     ROS_ERROR_STREAM_NAMED("opw", "The OPW parameters loaded from the parameter "
-      "server appear to be incorrect (self-test failed).");
+                                  "server appear to be incorrect (self-test failed).");
     return false;
   }
 
@@ -152,9 +153,11 @@ bool MoveItOPWKinematicsPlugin::timedOut(const ros::WallTime& start_time, double
 
 bool MoveItOPWKinematicsPlugin::selfTest()
 {
-  const std::vector<double> joint_angles = { 0.1, -0.1, 0.2, -0.3, 0.5, -0.8 };
+  // MoveIt takes std::vector, opw kinematics takes std::array
+  const std::array<double, 6> joint_angles_arr = { 0.1, -0.1, 0.2, -0.3, 0.5, -0.8 };
+  const std::vector<double> joint_angles(joint_angles_arr.begin(), joint_angles_arr.end());
 
-  auto fk_pose_opw = opw_kinematics::forward(opw_parameters_, &joint_angles[0]);
+  auto fk_pose_opw = opw_kinematics::forward(opw_parameters_, joint_angles_arr);
   robot_state_->setJointGroupPositions(joint_model_group_, joint_angles);
   auto fk_pose_moveit = robot_state_->getGlobalLinkTransform(tip_frames_[0]);
   // group/robot might not be at origin, subtract base transform
@@ -438,9 +441,10 @@ bool MoveItOPWKinematicsPlugin::getPositionFK(const std::vector<std::string>& li
     return false;
   }
   poses.resize(link_names.size());
-  if (joint_angles.size() != dimension_)
+  // Check for size 6, the only robot type that works for the opw_kinematics solver
+  if (joint_angles.size() != 6)
   {
-    ROS_ERROR_NAMED("opw", "Joint angles vector must have size: %d", dimension_);
+    ROS_ERROR_NAMED("opw", "Joint angles vector must have size: 6");
     return false;
   }
 
@@ -453,9 +457,10 @@ bool MoveItOPWKinematicsPlugin::getPositionFK(const std::vector<std::string>& li
     return false;
   }
 
-  // forward function expect pointer to first element of array of joint values
-  // that is why &joint_angles[0] is passed
-  tf::poseEigenToMsg(opw_kinematics::forward(opw_parameters_, &joint_angles[0]), poses[0]);
+  // opw_kinematics works with std::array
+  std::array<double, 6> joint_angles_arr;
+  std::copy(joint_angles.begin(), joint_angles.end(), joint_angles_arr.begin());
+  tf::poseEigenToMsg(opw_kinematics::forward(opw_parameters_, joint_angles_arr), poses[0]);
 
   return true;
 }
@@ -572,20 +577,18 @@ bool MoveItOPWKinematicsPlugin::getAllIK(const Eigen::Isometry3d& pose,
   // Eigen::Isometry3d tool_pose = diff_base.inverse() * pose *
   // tip_frame.inverse();
 
-  std::array<double, 6 * 8> sols;
-  opw_kinematics::inverse(opw_parameters_, pose, sols.data());
+  std::array<std::array<double, 6>, 8> sols = opw_kinematics::inverse(opw_parameters_, pose);
 
   // Check the output
-  std::vector<double> tmp(6);  // temporary storage for API reasons
-  for (int i = 0; i < 8; i++)
+  std::vector<double> tmp(6);  // temporary storage to convert std::array to std::vector
+  for (auto sol : sols)
   {
-    double* sol = sols.data() + 6 * i;
     if (opw_kinematics::isValid(sol))
     {
       opw_kinematics::harmonizeTowardZero(sol);
 
       // TODO: make this better...
-      std::copy(sol, sol + 6, tmp.data());
+      std::copy(sol.begin(), sol.end(), tmp.begin());
       // if (isValid(tmp))
       // {
       joint_poses.push_back(tmp);
