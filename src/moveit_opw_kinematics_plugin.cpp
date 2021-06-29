@@ -97,10 +97,17 @@ bool MoveItOPWKinematicsPlugin::initialize(const moveit::core::RobotModel& robot
   }
 
   // check geometric parameters for opw model
-  if (!selfTest())
+  if (!selfTest({0, 0, 0, 0, 0, 0}))
   {
     ROS_ERROR_STREAM_NAMED("opw", "The OPW parameters loaded from the parameter "
-      "server appear to be incorrect (self-test failed).");
+      "server appear to be incorrect (self-test failed for '0 0 0 0 0 0').");
+    return false;
+  }
+  const std::vector<double> joint_angles = { 0.1, -0.1, 0.2, -0.3, 0.5, -0.8 };
+  if (!selfTest(joint_angles))
+  {
+    ROS_ERROR_STREAM_NAMED("opw", "The OPW parameters loaded from the parameter "
+      "server appear to be incorrect (self-test failed for odd posture).");
     return false;
   }
 
@@ -150,10 +157,8 @@ bool MoveItOPWKinematicsPlugin::timedOut(const ros::WallTime& start_time, double
   return ((ros::WallTime::now() - start_time).toSec() >= duration);
 }
 
-bool MoveItOPWKinematicsPlugin::selfTest()
+bool MoveItOPWKinematicsPlugin::selfTest(const std::vector<double>& joint_angles)
 {
-  const std::vector<double> joint_angles = { 0.1, -0.1, 0.2, -0.3, 0.5, -0.8 };
-
   auto fk_pose_opw = opw_kinematics::forward(opw_parameters_, &joint_angles[0]);
   robot_state_->setJointGroupPositions(joint_model_group_, joint_angles);
   auto fk_pose_moveit = robot_state_->getGlobalLinkTransform(tip_frames_[0]);
@@ -177,6 +182,7 @@ bool MoveItOPWKinematicsPlugin::comparePoses(Eigen::Isometry3d& Ta, Eigen::Isome
 
   auto Ra = Ta.rotation();
   auto Rb = Tb.rotation();
+  bool valid = true;
   for (int i = 0; i < Ra.rows(); ++i)
   {
     for (int j = 0; j < Ra.cols(); ++j)
@@ -185,7 +191,7 @@ bool MoveItOPWKinematicsPlugin::comparePoses(Eigen::Isometry3d& Ta, Eigen::Isome
       {
         ROS_ERROR_NAMED("opw", "Pose orientation error on element (%d, %d).", i, j);
         ROS_ERROR_NAMED("opw", "opw: %f, moveit: %f.", Ra(i, j), Rb(i, j));
-        return false;
+        valid = false;
       }
     }
   }
@@ -198,10 +204,10 @@ bool MoveItOPWKinematicsPlugin::comparePoses(Eigen::Isometry3d& Ta, Eigen::Isome
     {
       ROS_ERROR_NAMED("opw", "Pose position error on element (%d).", i);
       ROS_ERROR_NAMED("opw", "opw: %f, moveit: %f.", pa(i), pb(i));
-      return false;
+      valid = false;
     }
   }
-  return true;
+  return valid;
 }
 
 bool MoveItOPWKinematicsPlugin::getPositionIK(const geometry_msgs::Pose& ik_pose,
