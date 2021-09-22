@@ -20,6 +20,8 @@ set(MOVEIT_LIB_NAME moveit_opw_kinematics_plugin)
 # System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS filesystem)
 
+find_package(opw_kinematics REQUIRED)
+
 ###################################
 ## catkin specific configuration ##
 ###################################
@@ -42,7 +44,6 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
   include
-  external/opw_kinematics/include
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -53,6 +54,7 @@ add_library(${MOVEIT_LIB_NAME}
 
 target_link_libraries(${MOVEIT_LIB_NAME}
   ${catkin_LIBRARIES}
+  opw_kinematics::opw_kinematics
 )
 
 #############
