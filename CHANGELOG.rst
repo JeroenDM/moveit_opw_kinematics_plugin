@@ -2,8 +2,8 @@
 Changelog for package moveit_opw_kinematics_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.1 (2021-09-22)
+------------------
 * First release in noetic.
 * update to new opw_kinematics API (with std::array)
 * Add opw_kinematics dependency to package.xml and CMakeLists.txt.
