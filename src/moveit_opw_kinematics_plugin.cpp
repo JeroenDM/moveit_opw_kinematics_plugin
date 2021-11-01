@@ -108,7 +108,7 @@ bool MoveItOPWKinematicsPlugin::initialize(const moveit::core::RobotModel& robot
   if (!selfTest(joint_angles))
   {
     ROS_ERROR_STREAM_NAMED("opw", "The OPW parameters loaded from the parameter "
-      "server appear to be incorrect (self-test failed for odd posture).");
+      "server appear to be incorrect (self-test failed for odd posture: '0.1, -0.1, 0.2, -0.3, 0.5, -0.8').");
     return false;
   }
 
