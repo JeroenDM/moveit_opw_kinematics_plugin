@@ -33,6 +33,7 @@ find_package(opw_kinematics REQUIRED)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   LIBRARIES ${MOVEIT_LIB_NAME}
+  CATKIN_DEPENDS roscpp
 )
 
 ###########
