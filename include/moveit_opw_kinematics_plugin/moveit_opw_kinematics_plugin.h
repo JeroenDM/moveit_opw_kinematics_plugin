@@ -148,7 +148,7 @@ private:
    *
    * A basic tests to check if the geometric parameters loaded at initialization are correct.
    */
-  bool selfTest();
+  bool selfTest(const std::vector<double>& joint_angles);
 
   /**
    * @brief check if two poses are the same within an absolute tolerance of 1e-6
