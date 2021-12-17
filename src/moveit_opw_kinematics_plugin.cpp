@@ -162,8 +162,9 @@ bool MoveItOPWKinematicsPlugin::timedOut(const ros::WallTime& start_time, double
 bool MoveItOPWKinematicsPlugin::selfTest(const std::vector<double>& joint_angles)
 {
   // MoveIt takes std::vector, opw kinematics takes std::array
-  const std::array<double, 6> joint_angles_arr = { 0.1, -0.1, 0.2, -0.3, 0.5, -0.8 };
-  const std::vector<double> joint_angles(joint_angles_arr.begin(), joint_angles_arr.end());
+  std::array<double, 6> joint_angles_arr{};
+  std::copy_n(joint_angles.begin(), joint_angles_arr.size(), joint_angles_arr.begin());
+
 
   auto fk_pose_opw = opw_kinematics::forward(opw_parameters_, joint_angles_arr);
   robot_state_->setJointGroupPositions(joint_model_group_, joint_angles);
