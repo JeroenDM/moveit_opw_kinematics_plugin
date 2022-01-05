@@ -2,8 +2,8 @@
 Changelog for package moveit_opw_kinematics_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.4.0 (2022-01-05)
+------------------
 * Update status badge noetic-devel (default) branch
 * Run melodic ci job on ubuntu 18.04
 * Sync melodic changes to noetic
