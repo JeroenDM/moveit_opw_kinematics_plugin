@@ -23,6 +23,7 @@ CLASS_LOADER_REGISTER_CLASS(moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlu
 
 namespace moveit_opw_kinematics_plugin
 {
+constexpr char LOGNAME[] = "opw";
 using kinematics::KinematicsResult;
 
 MoveItOPWKinematicsPlugin::MoveItOPWKinematicsPlugin() : active_(false)
@@ -35,7 +36,7 @@ bool MoveItOPWKinematicsPlugin::initialize(const moveit::core::RobotModel& robot
 {
   bool debug = false;
 
-  ROS_INFO_STREAM_NAMED("opw", "MoveItOPWKinematicsPlugin initializing");
+  ROS_INFO_STREAM_NAMED(LOGNAME, "MoveItOPWKinematicsPlugin initializing");
 
   storeValues(robot_model, group_name, base_frame, tip_frames, search_discretization);
 
@@ -56,10 +57,10 @@ bool MoveItOPWKinematicsPlugin::initialize(const moveit::core::RobotModel& robot
 
   // Get the dimension of the planning group
   dimension_ = joint_model_group_->getVariableCount();
-  ROS_INFO_STREAM_NAMED("opw", "Dimension planning group '"
-                                   << group_name << "': " << dimension_
-                                   << ". Active Joints Models: " << joint_model_group_->getActiveJointModels().size()
-                                   << ". Mimic Joint Models: " << joint_model_group_->getMimicJointModels().size());
+  ROS_INFO_STREAM_NAMED(LOGNAME, "Dimension planning group '"
+                                     << group_name << "': " << dimension_
+                                     << ". Active Joints Models: " << joint_model_group_->getActiveJointModels().size()
+                                     << ". Mimic Joint Models: " << joint_model_group_->getMimicJointModels().size());
 
   // Copy joint names
   for (std::size_t i = 0; i < joint_model_group_->getActiveJointModels().size(); ++i)
@@ -69,7 +70,7 @@ bool MoveItOPWKinematicsPlugin::initialize(const moveit::core::RobotModel& robot
 
   if (debug)
   {
-    ROS_ERROR_STREAM_NAMED("opw", "tip links available:");
+    ROS_ERROR_STREAM_NAMED(LOGNAME, "tip links available:");
     std::copy(tip_frames_.begin(), tip_frames_.end(), std::ostream_iterator<std::string>(std::cout, "\n"));
   }
 
@@ -78,7 +79,7 @@ bool MoveItOPWKinematicsPlugin::initialize(const moveit::core::RobotModel& robot
   {
     if (!joint_model_group_->hasLinkModel(tip_frames_[i]))
     {
-      ROS_ERROR_NAMED("opw", "Could not find tip name '%s' in joint group '%s'", tip_frames_[i].c_str(),
+      ROS_ERROR_NAMED(LOGNAME, "Could not find tip name '%s' in joint group '%s'", tip_frames_[i].c_str(),
                       group_name.c_str());
       return false;
     }
@@ -92,21 +93,28 @@ bool MoveItOPWKinematicsPlugin::initialize(const moveit::core::RobotModel& robot
   // set geometric parameters for opw model
   if (!setOPWParameters())
   {
-    ROS_ERROR_STREAM_NAMED("opw", "Could not load OPW parameters. Please make "
-                                  "sure they are loaded on the parameter server and are of the correct type(s).");
+    ROS_ERROR_STREAM_NAMED(LOGNAME, "Could not load OPW parameters. Please make "
+                                    "sure they are loaded on the parameter server and are of the correct type(s).");
     return false;
   }
 
   // check geometric parameters for opw model
-  if (!selfTest())
+  if (!selfTest({ 0, 0, 0, 0, 0, 0 }))
   {
-    ROS_ERROR_STREAM_NAMED("opw", "The OPW parameters loaded from the parameter "
-                                  "server appear to be incorrect (self-test failed).");
+    ROS_ERROR_STREAM_NAMED(LOGNAME, "The OPW parameters loaded from the parameter "
+                                    "server appear to be incorrect (self-test failed for '0 0 0 0 0 0').");
+    return false;
+  }
+  const std::vector<double> joint_angles = { 0.1, -0.1, 0.2, -0.3, 0.5, -0.8 };
+  if (!selfTest(joint_angles))
+  {
+    ROS_ERROR_STREAM_NAMED(LOGNAME, "The OPW parameters loaded from the parameter server appear to be incorrect"
+                                    " (self-test failed for odd posture: '0.1, -0.1, 0.2, -0.3, 0.5, -0.8').");
     return false;
   }
 
   active_ = true;
-  ROS_DEBUG_NAMED("opw", "OPW kinematics solver initialized");
+  ROS_DEBUG_NAMED(LOGNAME, "OPW kinematics solver initialized");
   return true;
 }
 
@@ -114,12 +122,12 @@ bool MoveItOPWKinematicsPlugin::setRedundantJoints(const std::vector<unsigned in
 {
   if (num_possible_redundant_joints_ < 0)
   {
-    ROS_ERROR_NAMED("opw", "This group cannot have redundant joints");
+    ROS_ERROR_NAMED(LOGNAME, "This group cannot have redundant joints");
     return false;
   }
   if (redundant_joints.size() > static_cast<std::size_t>(num_possible_redundant_joints_))
   {
-    ROS_ERROR_NAMED("opw", "This group can only have %d redundant joints", num_possible_redundant_joints_);
+    ROS_ERROR_NAMED(LOGNAME, "This group can only have %d redundant joints", num_possible_redundant_joints_);
     return false;
   }
 
@@ -151,11 +159,12 @@ bool MoveItOPWKinematicsPlugin::timedOut(const ros::WallTime& start_time, double
   return ((ros::WallTime::now() - start_time).toSec() >= duration);
 }
 
-bool MoveItOPWKinematicsPlugin::selfTest()
+bool MoveItOPWKinematicsPlugin::selfTest(const std::vector<double>& joint_angles)
 {
   // MoveIt takes std::vector, opw kinematics takes std::array
-  const std::array<double, 6> joint_angles_arr = { 0.1, -0.1, 0.2, -0.3, 0.5, -0.8 };
-  const std::vector<double> joint_angles(joint_angles_arr.begin(), joint_angles_arr.end());
+  std::array<double, 6> joint_angles_arr{};
+  std::copy_n(joint_angles.begin(), joint_angles_arr.size(), joint_angles_arr.begin());
+
 
   auto fk_pose_opw = opw_kinematics::forward(opw_parameters_, joint_angles_arr);
   robot_state_->setJointGroupPositions(joint_model_group_, joint_angles);
@@ -180,15 +189,16 @@ bool MoveItOPWKinematicsPlugin::comparePoses(Eigen::Isometry3d& Ta, Eigen::Isome
 
   auto Ra = Ta.rotation();
   auto Rb = Tb.rotation();
+  bool valid = true;
   for (int i = 0; i < Ra.rows(); ++i)
   {
     for (int j = 0; j < Ra.cols(); ++j)
     {
       if (std::abs(Ra(i, j) - Rb(i, j)) > TOLERANCE)
       {
-        ROS_ERROR_NAMED("opw", "Pose orientation error on element (%d, %d).", i, j);
-        ROS_ERROR_NAMED("opw", "opw: %f, moveit: %f.", Ra(i, j), Rb(i, j));
-        return false;
+        ROS_ERROR_NAMED(LOGNAME, "Pose orientation error on element (%d, %d).", i, j);
+        ROS_ERROR_NAMED(LOGNAME, "opw: %f, moveit: %f.", Ra(i, j), Rb(i, j));
+        valid = false;
       }
     }
   }
@@ -199,12 +209,12 @@ bool MoveItOPWKinematicsPlugin::comparePoses(Eigen::Isometry3d& Ta, Eigen::Isome
   {
     if (std::abs(pa(i) - pb(i)) > TOLERANCE)
     {
-      ROS_ERROR_NAMED("opw", "Pose position error on element (%d).", i);
-      ROS_ERROR_NAMED("opw", "opw: %f, moveit: %f.", pa(i), pb(i));
-      return false;
+      ROS_ERROR_NAMED(LOGNAME, "Pose position error on element (%d).", i);
+      ROS_ERROR_NAMED(LOGNAME, "opw: %f, moveit: %f.", pa(i), pb(i));
+      valid = false;
     }
   }
-  return true;
+  return valid;
 }
 
 bool MoveItOPWKinematicsPlugin::getPositionIK(const geometry_msgs::Pose& ik_pose,
@@ -311,7 +321,7 @@ void MoveItOPWKinematicsPlugin::expandIKSolutions(std::vector<std::vector<double
             additional_solutions.push_back(up_sol);
           }
         }
-        ROS_DEBUG_STREAM_NAMED("opw",
+        ROS_DEBUG_STREAM_NAMED(LOGNAME,
                                "Found " << additional_solutions.size() << " additional solutions for j=" << i + 1);
         solutions.insert(solutions.end(), additional_solutions.begin(), additional_solutions.end());
       }
@@ -329,7 +339,7 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs
   // Check if active
   if (!active_)
   {
-    ROS_ERROR_NAMED("opw", "kinematics not active");
+    ROS_ERROR_NAMED(LOGNAME, "kinematics not active");
     error_code.val = error_code.NO_IK_SOLUTION;
     return false;
   }
@@ -337,7 +347,7 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs
   // Check if seed state correct
   if (ik_seed_state.size() != dimension_)
   {
-    ROS_ERROR_STREAM_NAMED("opw",
+    ROS_ERROR_STREAM_NAMED(LOGNAME,
                            "Seed state must have size " << dimension_ << " instead of size " << ik_seed_state.size());
     error_code.val = error_code.NO_IK_SOLUTION;
     return false;
@@ -346,9 +356,9 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs
   // Check that we have the same number of poses as tips
   if (tip_frames_.size() != ik_poses.size())
   {
-    ROS_ERROR_STREAM_NAMED("opw", "Mismatched number of pose requests (" << ik_poses.size() << ") to tip frames ("
-                                                                         << tip_frames_.size()
-                                                                         << ") in searchPositionIK");
+    ROS_ERROR_STREAM_NAMED(LOGNAME, "Mismatched number of pose requests (" << ik_poses.size() << ") to tip frames ("
+                                                                           << tip_frames_.size()
+                                                                           << ") in searchPositionIK");
     error_code.val = error_code.NO_IK_SOLUTION;
     return false;
   }
@@ -358,7 +368,7 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs
   std::vector<std::vector<double>> solutions;
   if (!getAllIK(pose, solutions))
   {
-    ROS_DEBUG_STREAM_NAMED("opw", "Failed to find IK solution");
+    ROS_DEBUG_STREAM_NAMED(LOGNAME, "Failed to find IK solution");
     error_code.val = error_code.NO_IK_SOLUTION;
     return false;
   }
@@ -368,7 +378,7 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs
   // therefore first extend solution space, then apply joint limits later
   expandIKSolutions(solutions);
 
-  ROS_DEBUG_STREAM_NAMED("opw", "Now have " << solutions.size() << " potential solutions");
+  ROS_DEBUG_STREAM_NAMED(LOGNAME, "Now have " << solutions.size() << " potential solutions");
 
   std::vector<LimitObeyingSol> limit_obeying_solutions;
 
@@ -378,7 +388,7 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs
     // robot_state_->update(); // not required for checking bounds
     if (!robot_state_->satisfiesBounds(joint_model_group_))
     {
-      ROS_DEBUG_STREAM_NAMED("opw", "Solution is outside bounds");
+      ROS_DEBUG_STREAM_NAMED(LOGNAME, "Solution is outside bounds");
       continue;
     }
     limit_obeying_solutions.push_back({ sol, distance(sol, ik_seed_state) });
@@ -386,11 +396,11 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs
 
   if (limit_obeying_solutions.empty())
   {
-    ROS_DEBUG_NAMED("opw", "None of the solutions is within joint limits");
+    ROS_DEBUG_NAMED(LOGNAME, "None of the solutions is within joint limits");
     return false;
   }
 
-  ROS_DEBUG_STREAM_NAMED("opw", "Solutions within limits: " << limit_obeying_solutions.size());
+  ROS_DEBUG_STREAM_NAMED(LOGNAME, "Solutions within limits: " << limit_obeying_solutions.size());
 
   // sort solutions by distance to seed state
   std::sort(limit_obeying_solutions.begin(), limit_obeying_solutions.end());
@@ -407,12 +417,12 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs
     if (error_code.val == moveit_msgs::MoveItErrorCodes::SUCCESS)
     {
       solution = sol.value;
-      ROS_DEBUG_STREAM_NAMED("opw", "Solution passes callback");
+      ROS_DEBUG_STREAM_NAMED(LOGNAME, "Solution passes callback");
       return true;
     }
   }
 
-  ROS_DEBUG_STREAM_NAMED("opw", "No solution fullfilled requirements of solution callback");
+  ROS_DEBUG_STREAM_NAMED(LOGNAME, "No solution fullfilled requirements of solution callback");
   return false;
 }
 
@@ -423,7 +433,7 @@ bool MoveItOPWKinematicsPlugin::getPositionIK(const std::vector<geometry_msgs::P
 {
   if (ik_poses.size() > 1 || ik_poses.size() == 0)
   {
-    ROS_ERROR_STREAM_NAMED("opw", "You can only get all solutions for a single pose.");
+    ROS_ERROR_STREAM_NAMED(LOGNAME, "You can only get all solutions for a single pose.");
     return false;
   }
   Eigen::Isometry3d pose;
@@ -437,23 +447,23 @@ bool MoveItOPWKinematicsPlugin::getPositionFK(const std::vector<std::string>& li
 {
   if (!active_)
   {
-    ROS_ERROR_NAMED("opw", "kinematics not active");
+    ROS_ERROR_NAMED(LOGNAME, "kinematics not active");
     return false;
   }
   poses.resize(link_names.size());
   // Check for size 6, the only robot type that works for the opw_kinematics solver
   if (joint_angles.size() != 6)
   {
-    ROS_ERROR_NAMED("opw", "Joint angles vector must have size: 6");
+    ROS_ERROR_NAMED(LOGNAME, "Joint angles vector must have size: %d", dimension_);
     return false;
   }
 
   // Check that we have the same number of poses as tips
   if (tip_frames_.size() != poses.size())
   {
-    ROS_ERROR_STREAM_NAMED("opw", "Mismatched number of pose requests (" << poses.size() << ") to tip frames ("
-                                                                         << tip_frames_.size()
-                                                                         << ") in searchPositionFK");
+    ROS_ERROR_STREAM_NAMED(LOGNAME, "Mismatched number of pose requests (" << poses.size() << ") to tip frames ("
+                                                                           << tip_frames_.size()
+                                                                           << ") in searchPositionFK");
     return false;
   }
 
