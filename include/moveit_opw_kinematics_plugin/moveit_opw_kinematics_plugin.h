@@ -163,8 +163,6 @@ private:
 
   const robot_model::JointModelGroup* joint_model_group_;
 
-  robot_state::RobotStatePtr robot_state_;
-
   int num_possible_redundant_joints_;
 
   opw_kinematics::Parameters<double> opw_parameters_;
