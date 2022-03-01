@@ -86,10 +86,6 @@ bool MoveItOPWKinematicsPlugin::initialize(const moveit::core::RobotModel& robot
     ik_group_info_.link_names.push_back(tip_frames_[i]);
   }
 
-  // Setup the joint state groups that we need
-  robot_state_.reset(new robot_state::RobotState(robot_model_));
-  robot_state_->setToDefaultValues();
-
   // set geometric parameters for opw model
   if (!setOPWParameters())
   {
@@ -165,12 +161,12 @@ bool MoveItOPWKinematicsPlugin::selfTest(const std::vector<double>& joint_angles
   std::array<double, 6> joint_angles_arr{};
   std::copy_n(joint_angles.begin(), joint_angles_arr.size(), joint_angles_arr.begin());
 
-
   auto fk_pose_opw = opw_kinematics::forward(opw_parameters_, joint_angles_arr);
-  robot_state_->setJointGroupPositions(joint_model_group_, joint_angles);
-  auto fk_pose_moveit = robot_state_->getGlobalLinkTransform(tip_frames_[0]);
+  robot_state::RobotState robot_state(robot_model_);
+  robot_state.setJointGroupPositions(joint_model_group_, joint_angles);
+  auto fk_pose_moveit = robot_state.getGlobalLinkTransform(tip_frames_[0]);
   // group/robot might not be at origin, subtract base transform
-  auto base = robot_state_->getGlobalLinkTransform(base_frame_);
+  auto base = robot_state.getGlobalLinkTransform(base_frame_);
   fk_pose_moveit = base.inverse() * fk_pose_moveit;
 
   if (!comparePoses(fk_pose_opw, fk_pose_moveit))
@@ -178,8 +174,6 @@ bool MoveItOPWKinematicsPlugin::selfTest(const std::vector<double>& joint_angles
     return false;
   }
 
-  // reset robot state
-  robot_state_->setToDefaultValues();
   return true;
 }
 
@@ -381,12 +375,14 @@ bool MoveItOPWKinematicsPlugin::searchPositionIK(const std::vector<geometry_msgs
   ROS_DEBUG_STREAM_NAMED(LOGNAME, "Now have " << solutions.size() << " potential solutions");
 
   std::vector<LimitObeyingSol> limit_obeying_solutions;
+  // in order to stay threadsafe, instantiate robot state for each thread
+  static thread_local robot_state::RobotState robot_state(robot_model_);
 
   for (auto& sol : solutions)
   {
-    robot_state_->setJointGroupPositions(joint_model_group_, sol);
-    // robot_state_->update(); // not required for checking bounds
-    if (!robot_state_->satisfiesBounds(joint_model_group_))
+    robot_state.setJointGroupPositions(joint_model_group_, sol);
+    // robot_state.update(); // not required for checking bounds
+    if (!robot_state.satisfiesBounds(joint_model_group_))
     {
       ROS_DEBUG_STREAM_NAMED(LOGNAME, "Solution is outside bounds");
       continue;
