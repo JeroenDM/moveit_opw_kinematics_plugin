@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+
+<!-- This MoveIt configuration includes the opw kinematics parameters. -->
+<include file="$(find kuka_kr6r700_moveit_config)/launch/planning_context.launch">
+  <arg name="load_robot_description" value="true"/>
+</include>
+
+<param name="tip_link" value="tool0" />
+<param name="root_link" value="base_link" />
+<param name="group" value="manipulator" />
+
+<test pkg="moveit_opw_kinematics_plugin" type="moveit_opw_kinematics_plugin_test_kuka" test-name="test_plugin_kuka"/>
+
+</launch>

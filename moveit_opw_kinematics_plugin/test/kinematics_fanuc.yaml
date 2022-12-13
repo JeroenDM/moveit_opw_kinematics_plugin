@@ -1,0 +1,13 @@
+robot_description_kinematics:
+  manipulator:
+    kinematics_solver: moveit_opw_kinematics_plugin/MoveItOPWKinematicsPlugin
+    opw_kinematics_geometric_parameters:
+      a1:  0.150
+      a2: -0.200
+      b:   0.000
+      c1:  0.450
+      c2:  0.600
+      c3:  0.640
+      c4:  0.100
+    opw_kinematics_joint_offsets: [0, 0, -1.57079632679, 0, 0, 3.14159265359]
+    opw_kinematics_joint_sign_corrections: [1, 1, -1, -1, -1, -1]

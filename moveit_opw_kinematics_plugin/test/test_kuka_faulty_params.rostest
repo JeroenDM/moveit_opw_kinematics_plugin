@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<launch>
+
+<include file="$(find kuka_kr6r700_moveit_config)/launch/planning_context.launch">
+  <arg name="load_robot_description" value="true"/>
+</include>
+
+<!-- Overwrite the default opw parameters loaded by planning_context.launch. -->
+<rosparam command="load" file="$(find moveit_opw_kinematics_plugin)/test/faulty_kinematics_kuka.yaml" />
+<param name="tip_link" value="tool0" />
+<param name="root_link" value="base_link" />
+<param name="group" value="manipulator" />
+
+<test pkg="moveit_opw_kinematics_plugin" type="moveit_opw_kinematics_plugin_test_kuka_faulty" test-name="test_plugin_kuka_faulty"/>
+
+</launch>

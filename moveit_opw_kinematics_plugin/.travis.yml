@@ -1,0 +1,19 @@
+sudo: required
+dist: trusty
+language: generic
+compiler:
+  - gcc
+
+env:
+  global:
+    - CCACHE_DIR=$HOME/.ccache
+    - ROS_REPO=ros
+    - ROSINSTALL_FILENAME=.travis.rosinstall
+  matrix:
+    - ROS_DISTRO="melodic" UPSTREAM_WORKSPACE=file
+
+install:
+  - git clone --quiet --depth=1 https://github.com/ros-industrial/industrial_ci.git .ci_config
+
+script:
+  - .ci_config/travis.sh
