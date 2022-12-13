@@ -9,7 +9,8 @@ target_include_directories(${MOVEIT_LIB_NAME}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/opw_kinematics/include>
         $<INSTALL_INTERFACE:include>)
 
-ament_target_dependencies(${MOVEIT_LIB_NAME}
+ament_target_dependencies(
+        ${MOVEIT_LIB_NAME}
         rclcpp
         random_numbers
         pluginlib
@@ -19,7 +20,11 @@ ament_target_dependencies(${MOVEIT_LIB_NAME}
         kdl_parser
         tf2_kdl
         EIGEN3
-        )
+)
+
+target_link_libraries(
+        ${MOVEIT_LIB_NAME}
+)
 
 # prevent pluginlib from using boost
 target_compile_definitions(${MOVEIT_LIB_NAME} PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")

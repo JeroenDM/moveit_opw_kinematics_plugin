@@ -89,6 +89,7 @@ namespace moveit_opw_kinematics_plugin {
                                 const std::string &group_name, const std::string &base_frame,
                                 const std::vector<std::string> &tip_frames, double search_discretization) override;
 
+        rcl_interfaces::srv::GetParameters::Response::SharedPtr getParamsFromNode(const std::string &node_name, const std::string &parameter_name);
 
         /**
          * @brief  Return all the joint names in the order they are used internally
@@ -170,9 +171,11 @@ namespace moveit_opw_kinematics_plugin {
          */
         bool comparePoses(Eigen::Isometry3d &Ta, Eigen::Isometry3d &Tb);
 
-        bool active_; /** Internal variable that indicates whether solvers are configured and ready */
+        bool initialized_; /** Internal variable that indicates whether solvers are configured and ready */
 
         moveit_msgs::msg::KinematicSolverInfo ik_group_info_; /** Stores information for the inverse kinematics solver */
+
+        static rclcpp::Clock steady_clock_;
 
         unsigned int dimension_; /** Dimension of the group */
 
@@ -186,8 +189,6 @@ namespace moveit_opw_kinematics_plugin {
         int num_possible_redundant_joints_;
 
         opw_kinematics::Parameters<double> opw_parameters_;
-
-        rclcpp::Node::SharedPtr node_;
     };
 }  // namespace moveit_opw_kinematics_plugin
 

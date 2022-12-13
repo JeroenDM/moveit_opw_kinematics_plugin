@@ -18,50 +18,47 @@
 #include "opw_kinematics/opw_io.h"
 #include "opw_kinematics/opw_kinematics.h"
 #include "opw_kinematics/opw_utilities.h"
+#include "rcl_interfaces/srv/get_parameters.hpp"
+
+// register OPWKinematics as a KinematicsBase implementation
+#include <class_loader/class_loader.hpp>
+
+CLASS_LOADER_REGISTER_CLASS(moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin, kinematics::KinematicsBase
+)
 
 namespace moveit_opw_kinematics_plugin {
-    static rclcpp::Logger LOGGER = rclcpp::get_logger("moveit_opw_kinematics_plugin");
+    static rclcpp::Logger LOGGER = rclcpp::get_logger("moveit_opw_kinematics_plugin.opw_kinematics_plugin");
 
-    using kinematics::KinematicsResult;
+    rclcpp::Clock MoveItOPWKinematicsPlugin::steady_clock_{RCL_STEADY_TIME};
 
-    MoveItOPWKinematicsPlugin::MoveItOPWKinematicsPlugin() : active_(false) {
+    MoveItOPWKinematicsPlugin::MoveItOPWKinematicsPlugin() : initialized_(false) {
     }
 
-    bool
-    MoveItOPWKinematicsPlugin::initialize(const rclcpp::Node::SharedPtr &node,
-                                          const moveit::core::RobotModel &robot_model,
-                                          const std::string &group_name, const std::string &base_frame,
-                                          const std::vector<std::string> &tip_frames, double search_discretization) {
-        bool debug = false;
-
-        RCLCPP_INFO_STREAM(LOGGER, "MoveItOPWKinematicsPlugin initializing");
+    bool MoveItOPWKinematicsPlugin::initialize(const rclcpp::Node::SharedPtr &node,
+                                               const moveit::core::RobotModel &robot_model,
+                                               const std::string &group_name, const std::string &base_frame,
+                                               const std::vector<std::string> &tip_frames,
+                                               double search_discretization) {
         node_ = node;
         storeValues(robot_model, group_name, base_frame, tip_frames, search_discretization);
+
+        RCLCPP_INFO_STREAM(LOGGER, "MoveItOPWKinematicsPlugin initializing");
+
         joint_model_group_ = robot_model_->getJointModelGroup(group_name);
         if (!joint_model_group_)
             return false;
 
-        RCLCPP_INFO_STREAM(LOGGER, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Node Name: " << node_->get_name());
-
-        if (!joint_model_group_->isChain())
-        {
+        if (!joint_model_group_->isChain()) {
             RCLCPP_ERROR(LOGGER, "Group '%s' is not a chain", group_name.c_str());
             return false;
         }
-        if (!joint_model_group_->isSingleDOFJoints())
-        {
+        if (!joint_model_group_->isSingleDOFJoints()) {
             RCLCPP_ERROR(LOGGER, "Group '%s' includes joints that have more than 1 DOF", group_name.c_str());
             return false;
         }
 
         // Get the dimension of the planning group
         dimension_ = joint_model_group_->getVariableCount();
-
-//        ROS_INFO_STREAM_NAMED("opw", "Dimension planning group '"
-//                << group_name << "': " << dimension_
-//                << ". Active Joints Models: " << joint_model_group_->getActiveJointModels().size()
-//                << ". Mimic Joint Models: " << joint_model_group_->getMimicJointModels().size());
-
         RCLCPP_INFO_STREAM(LOGGER, "Dimension planning group '"
                 << group_name << "': " << dimension_
                 << ". Active Joints Models: " << joint_model_group_->getActiveJointModels().size()
@@ -70,11 +67,6 @@ namespace moveit_opw_kinematics_plugin {
         // Copy joint names
         for (std::size_t i = 0; i < joint_model_group_->getActiveJointModels().size(); ++i) {
             ik_group_info_.joint_names.push_back(joint_model_group_->getActiveJointModelNames()[i]);
-        }
-
-        if (debug) {
-            RCLCPP_ERROR(LOGGER, "tip links available:");
-            std::copy(tip_frames_.begin(), tip_frames_.end(), std::ostream_iterator<std::string>(std::cout, "\n"));
         }
 
         // Make sure all the tip links are in the link_names vector
@@ -88,8 +80,7 @@ namespace moveit_opw_kinematics_plugin {
         }
 
         // Set up the joint state groups that we need
-//        robot_state_.reset(new robot_state::RobotState(robot_model_));
-        robot_state_ =std::make_shared<moveit::core::RobotState>(robot_model_);
+        robot_state_ = std::make_shared<moveit::core::RobotState>(robot_model_);
         robot_state_->setToDefaultValues();
 
         // set geometric parameters for opw model
@@ -106,7 +97,7 @@ namespace moveit_opw_kinematics_plugin {
             return false;
         }
 
-        active_ = true;
+        initialized_ = true;
 //        ROS_DEBUG_NAMED("opw", "OPW kinematics solver initialized");
         RCLCPP_DEBUG(LOGGER, "OPW kinematics solver initialized");
         return true;
@@ -127,6 +118,7 @@ namespace moveit_opw_kinematics_plugin {
         return true;
     }
 
+
     bool MoveItOPWKinematicsPlugin::isRedundantJoint(unsigned int index) const {
         for (std::size_t j = 0; j < redundant_joint_indices_.size(); ++j)
             if (redundant_joint_indices_[j] == index)
@@ -141,10 +133,6 @@ namespace moveit_opw_kinematics_plugin {
         }
         return -1;
     }
-
-//    bool MoveItOPWKinematicsPlugin::timedOut(const ros::WallTime &start_time, double duration) const {
-//        return ((ros::WallTime::now() - start_time).toSec() >= duration);
-//    }
 
     bool MoveItOPWKinematicsPlugin::timedOut(const rclcpp::Time &start_time, double duration) const {
         return ((node_->now() - start_time).seconds() >= duration);
@@ -201,7 +189,7 @@ namespace moveit_opw_kinematics_plugin {
                                                   std::vector<double> &solution,
                                                   moveit_msgs::msg::MoveItErrorCodes &error_code,
                                                   const kinematics::KinematicsQueryOptions &options) const {
-        const IKCallbackFn solution_callback = 0;
+        const IKCallbackFn solution_callback = nullptr;
         std::vector<double> consistency_limits;
 
         return searchPositionIK(ik_pose, ik_seed_state, default_timeout_, solution, solution_callback, error_code,
@@ -274,10 +262,8 @@ namespace moveit_opw_kinematics_plugin {
     }
 
     void MoveItOPWKinematicsPlugin::expandIKSolutions(std::vector<std::vector<double>> &solutions) const {
-//        const std::vector<const robot_model::JointModel *> &ajms = joint_model_group_->getActiveJointModels();
         const std::vector<const moveit::core::JointModel *> &ajms = joint_model_group_->getActiveJointModels();
         for (size_t i = 0; i < ajms.size(); ++i) {
-//            const robot_model::JointModel *jm = ajms[i];
             const moveit::core::JointModel *jm = ajms[i];
             if (jm->getVariableBounds().size() > 0) {
                 for (auto &bounds: jm->getVariableBounds()) {
@@ -315,7 +301,7 @@ namespace moveit_opw_kinematics_plugin {
                                                      moveit_msgs::msg::MoveItErrorCodes &error_code,
                                                      const kinematics::KinematicsQueryOptions & /*options*/) const {
         // Check if active
-        if (!active_) {
+        if (!initialized_) {
             RCLCPP_ERROR(LOGGER, "kinematics not active");
             error_code.val = error_code.NO_IK_SOLUTION;
             return false;
@@ -340,7 +326,6 @@ namespace moveit_opw_kinematics_plugin {
         }
 
         Eigen::Isometry3d pose;
-//        tf::poseMsgToEigen(ik_poses[0], pose);
         tf2::fromMsg(ik_poses[0], pose);
         std::vector<std::vector<double>> solutions;
         if (!getAllIK(pose, solutions)) {
@@ -360,7 +345,6 @@ namespace moveit_opw_kinematics_plugin {
 
         for (auto &sol: solutions) {
             robot_state_->setJointGroupPositions(joint_model_group_, sol);
-            // robot_state_->update(); // not required for checking bounds
             if (!robot_state_->satisfiesBounds(joint_model_group_)) {
                 RCLCPP_DEBUG_STREAM(LOGGER, "Solution is outside bounds");
                 continue;
@@ -369,7 +353,6 @@ namespace moveit_opw_kinematics_plugin {
         }
 
         if (limit_obeying_solutions.empty()) {
-//            ROS_DEBUG_NAMED("opw", "None of the solutions is within joint limits");
             RCLCPP_DEBUG(LOGGER, "None of the solutions is within joint limits");
             return false;
         }
@@ -407,7 +390,6 @@ namespace moveit_opw_kinematics_plugin {
             return false;
         }
         Eigen::Isometry3d pose;
-//        tf::poseMsgToEigen(ik_poses[0], pose);
         tf2::fromMsg(ik_poses[0], pose);
         return getAllIK(pose, solutions);
     }
@@ -415,7 +397,7 @@ namespace moveit_opw_kinematics_plugin {
     bool MoveItOPWKinematicsPlugin::getPositionFK(const std::vector<std::string> &link_names,
                                                   const std::vector<double> &joint_angles,
                                                   std::vector<geometry_msgs::msg::Pose> &poses) const {
-        if (!active_) {
+        if (!initialized_) {
             RCLCPP_ERROR(LOGGER, "kinematics not active");
             return false;
         }
@@ -433,9 +415,6 @@ namespace moveit_opw_kinematics_plugin {
             return false;
         }
 
-        // forward function expect pointer to first element of array of joint values
-        // that is why &joint_angles[0] is passed
-//        tf::poseEigenToMsg(opw_kinematics::forward(opw_parameters_, &joint_angles[0]), poses[0]);
         poses[0] = tf2::toMsg(opw_kinematics::forward(opw_parameters_, &joint_angles[0]));
         return true;
     };
@@ -452,38 +431,67 @@ namespace moveit_opw_kinematics_plugin {
         return joint_model_group_->getVariableNames();
     }
 
-    bool MoveItOPWKinematicsPlugin::setOPWParameters() {
-        RCLCPP_INFO_STREAM(LOGGER, "Getting kinematic parameters from parameter server.");
+    rcl_interfaces::srv::GetParameters::Response::SharedPtr
+    MoveItOPWKinematicsPlugin::getParamsFromNode(const std::string &node_name, const std::string &parameter_name) {
+        auto client = node_->create_client<rcl_interfaces::srv::GetParameters>("/move_group/get_parameters");
+        while (!client->wait_for_service(std::chrono::seconds(1))) {
+            RCLCPP_WARN(LOGGER, "Waiting for server to be up");
+        }
 
+        auto request = std::make_shared<rcl_interfaces::srv::GetParameters::Request>();
+        request->names = std::vector<std::string>{parameter_name};
+
+        auto future = client->async_send_request(request);
+
+        try {
+            auto response = future.get();
+            return response;
+        }
+        catch (const std::exception &e) {
+            RCLCPP_ERROR(LOGGER, "Service call failed");
+            throw e;
+        }
+    }
+
+    bool MoveItOPWKinematicsPlugin::setOPWParameters() {
         double kin_;
+        bool check;
         std::map<std::string, double> opw_kinematics_geometric_parameters;
         std::vector<std::string> names{"a1", "a2", "b", "c1", "c2", "c3", "c4"};
         for (long unsigned int i = 0; i < names.size(); i++) {
-            lookupParam(node_, "opw_kinematics_geometric_parameters." + names[i], kin_, 1.0);
+            check = lookupParam(node_, "opw_kinematics_geometric_parameters." + names[i], kin_, 1.0);
+            if (!check) {
+                auto response = getParamsFromNode("/move_group",
+                                                  "manipulator.opw_kinematics_geometric_parameters." + names[i]);
+                auto values = response->values;
+                auto type = values[0].integer_value;
+                kin_ = values[type].double_value;
+            }
             opw_kinematics_geometric_parameters.insert({names[i], kin_});
         }
 
-
         std::vector<double> joint_offsets;
-//        if (!lookupParam(node_, "opw_kinematics_joint_offsets", joint_offsets, )) {
-//            RCLCPP_ERROR_STREAM(LOGGER, "Failed to load joint offsets for ik solver.");
-//            return false;
-//        }
-        lookupParam(node_, "opw_kinematics_joint_offsets", joint_offsets, std::vector<double>{0, 0, 0, 0, 0, 0});
-
-        std::cout << "\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ opw_kinematics_joint_offsets: " << joint_offsets[1] << std::endl;
+        check = lookupParam(node_, "opw_kinematics_joint_offsets", joint_offsets,
+                            std::vector<double>{0, 0, 0, 0, 0, 0});
+        if (!check) {
+            auto response = getParamsFromNode("/move_group",
+                                              "manipulator.opw_kinematics_joint_offsets");
+            auto values = response->values;
+            auto type = values[0].integer_value;
+            joint_offsets = values[type].double_array_value;
+        }
 
         std::vector<int64_t> joint_sign_corrections;
-//        if (!lookupParam(node_, "opw_kinematics_joint_sign_corrections", joint_sign_corrections, {})) {
-//            RCLCPP_ERROR_STREAM(LOGGER, "Failed to load joint sign corrections for ik solver.");
-//            return false;
-//        }
 
-        bool fuck = lookupParam(node_, "opw_kinematics_joint_sign_corrections", joint_sign_corrections,
-                                std::vector<int64_t>{0, 0, 0, 0, 0, 0});
+        check = lookupParam(node_, "opw_kinematics_joint_sign_corrections", joint_sign_corrections,
+                            std::vector<int64_t>{0, 0, 0, 0, 0, 0});
+        if (!check) {
+            auto response = getParamsFromNode("/move_group", "manipulator.opw_kinematics_joint_sign_corrections");
+            auto values = response->values;
+            auto type = values[0].integer_value;
+            joint_sign_corrections = values[type].integer_array_value;
+        }
 
-        std::cout << "\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ opw_kinematics_joint_offsets: " << joint_offsets[1] << std::endl;
-        std::cout << "Able to get params: " << fuck << std::endl;
         opw_parameters_.a1 = opw_kinematics_geometric_parameters["a1"];
         opw_parameters_.a2 = opw_kinematics_geometric_parameters["a2"];
         opw_parameters_.b = opw_kinematics_geometric_parameters["b"];
@@ -510,10 +518,6 @@ namespace moveit_opw_kinematics_plugin {
             opw_parameters_.sign_corrections[i] = static_cast<signed char>(joint_sign_corrections[i]);
         }
 
-        RCLCPP_INFO_STREAM(LOGGER, "Loaded parameters for ik solver:\n" << opw_parameters_);
-        std::cout
-                << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! FINISHED THIS THING !!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-                << std::endl;
         return true;
     }
 
@@ -562,10 +566,7 @@ namespace moveit_opw_kinematics_plugin {
 
                 // TODO: make this better...
                 std::copy(sol, sol + 6, tmp.data());
-                // if (isValid(tmp))
-                // {
                 joint_poses.push_back(tmp);
-                // }
             }
         }
 
@@ -584,11 +585,3 @@ namespace moveit_opw_kinematics_plugin {
     }
 
 }  // namespace moveit_opw_kinematics_plugin
-
-//#include <pluginlib/class_list_macros.hpp>
-//PLUGINLIB_EXPORT_CLASS(moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin, kinematics::KinematicsBase)
-
-// register OPWKinematics as a KinematicsBase implementation
-#include <class_loader/class_loader.hpp>
-
-CLASS_LOADER_REGISTER_CLASS(moveit_opw_kinematics_plugin::MoveItOPWKinematicsPlugin, kinematics::KinematicsBase)
