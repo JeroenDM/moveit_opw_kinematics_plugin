@@ -1,155 +1,72 @@
-cmake_minimum_required(VERSION 3.5)
-project(moveit_opw_kinematics_plugin)
+cmake_minimum_required(VERSION 3.22)
+project(moveit_opw)
 
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
-endif()
-
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
-endif()
+# Common cmake code applied to all moveit packages
+find_package(moveit_common REQUIRED)
+moveit_package()
 
 find_package(ament_cmake REQUIRED)
-# find_package(eigen_conversions REQUIRED)
-find_package(moveit_core REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(orocos_kdl REQUIRED)
+find_package(tf2_kdl REQUIRED)
+find_package(kdl_parser REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(random_numbers REQUIRED)
 find_package(class_loader REQUIRED)
 find_package(pluginlib REQUIRED)
+find_package(moveit_core REQUIRED)
+find_package(moveit_ros_planning REQUIRED)
+find_package(moveit_msgs REQUIRED)
 
-# set(CMAKE_CXX_STANDARD 14)
-# set(CMAKE_CXX_STANDARD_REQUIRED ON)
-# set(CMAKE_CXX_EXTENSIONS OFF)
+# Finds Boost Components
+include(ConfigExtras.cmake)
 
-# ## Find catkin macros and libraries
-# ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-# ## is used, also find other catkin packages
-# find_package(catkin REQUIRED COMPONENTS
-#   eigen_conversions
-#   moveit_core
-#   roscpp
-#   pluginlib
-# )
+set(THIS_PACKAGE_INCLUDE_DIRS
+        moveit_opw_kinematics_plugin/include
+        )
 
-set(MOVEIT_LIB_NAME moveit_opw_kinematics_plugin)
+set(THIS_PACKAGE_LIBRARIES
+        moveit_opw_kinematics_plugin
+        )
 
-# # System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS filesystem)
+set(THIS_PACKAGE_INCLUDE_DEPENDS
+        pluginlib
+        moveit_core
+        moveit_ros_planning
+        Boost
+        )
 
-# ###################################
-# ## catkin specific configuration ##
-# ###################################
-# ## The catkin_package macro generates cmake config files for your package
-# ## Declare things to be passed to dependent projects
-# ## INCLUDE_DIRS: uncomment this if your package contains header files
-# ## LIBRARIES: libraries you create in this project that dependent projects also need
-# ## CATKIN_DEPENDS: catkin_packages dependent projects also need
-# ## DEPENDS: system dependencies of this project that dependent projects also need
-# catkin_package(
-#   LIBRARIES ${MOVEIT_LIB_NAME}
-# )
+pluginlib_export_plugin_description_file(moveit_core moveit_opw_kinematics_plugin_description.xml)
 
-# ###########
-# ## Build ##
-# ###########
-# include_directories(moveit_core rclcpp class_loader pluginlib)
+include_directories(${THIS_PACKAGE_INCLUDE_DIRS})
 
-add_library(${MOVEIT_LIB_NAME} SHARED src/moveit_opw_kinematics_plugin.cpp)
+add_subdirectory(moveit_opw_kinematics_plugin)
 
-target_include_directories(${MOVEIT_LIB_NAME}
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/opw_kinematics/include>
-    $<INSTALL_INTERFACE:include>)
+install(
+        TARGETS ${THIS_PACKAGE_LIBRARIES}
+        EXPORT export_${PROJECT_NAME}
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        RUNTIME DESTINATION bin
+        INCLUDES DESTINATION include
+)
 
-ament_target_dependencies(${MOVEIT_LIB_NAME} moveit_core rclcpp class_loader pluginlib)
+ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS} orocos_kdl_vendor)
 
-# ## Specify additional locations of header files
-# ## Your package locations should be listed before other locations
-# include_directories(
-#   include
-#   external/opw_kinematics/include
-#   ${catkin_INCLUDE_DIRS}
-# )
+if(BUILD_TESTING)
+    find_package(ament_lint_auto REQUIRED)
 
-# # Declare a C++ library
-# add_library(${MOVEIT_LIB_NAME}
-#   src/moveit_opw_kinematics_plugin.cpp
-# )
+    # These don't pass yet, disable them for now
+    set(ament_cmake_copyright_FOUND TRUE)
+    set(ament_cmake_cpplint_FOUND TRUE)
+    set(ament_cmake_flake8_FOUND TRUE)
+    set(ament_cmake_pep257_FOUND TRUE)
+    set(ament_cmake_uncrustify_FOUND TRUE)
+    set(ament_cmake_xmllint_FOUND TRUE)
 
-# target_link_libraries(${MOVEIT_LIB_NAME}
-#   ${catkin_LIBRARIES}
-# )
+    # Run all lint tests in package.xml except those listed above
+    ament_lint_auto_find_test_dependencies()
+endif()
 
-# #############
-# ## Install ##
-# #############
-
-# # Mark executables and/or libraries for installation
-# install(TARGETS ${MOVEIT_LIB_NAME}
-#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
-
-# install(
-#   FILES
-#     moveit_opw_kinematics_plugin_description.xml
-#   DESTINATION
-#     ${CATKIN_PACKAGE_SHARE_DESTINATION})
-
-# #############
-# ## Testing ##
-# #############
-
-# if(CATKIN_ENABLE_TESTING)
-#   find_package(moveit_ros_planning REQUIRED)
-#   find_package(rostest REQUIRED)
-
-#   include_directories(test ${moveit_ros_planning_INCLUDE_DIRS})
-  
-#   add_rostest_gtest(${PROJECT_NAME}_test_kuka
-#     test/test_kuka.rostest test/test_plugin.cpp
-#     test/test_kuka_specific.cpp
-#   )
-#   target_link_libraries(${PROJECT_NAME}_test_kuka
-#     gtest
-#     ${moveit_ros_planning_LIBRARIES}
-#     ${catkin_LIBRARIES}
-#     ${MOVEIT_LIB_NAME}
-#   )
-
-#   add_rostest_gtest(${PROJECT_NAME}_test_fanuc
-#     test/test_fanuc.rostest
-#     test/test_plugin.cpp
-#   )
-#   target_link_libraries(${PROJECT_NAME}_test_fanuc
-#     gtest
-#     ${moveit_ros_planning_LIBRARIES}
-#     ${catkin_LIBRARIES}
-#     ${MOVEIT_LIB_NAME}
-#   )
-
-#   add_rostest_gtest(${PROJECT_NAME}_test_fanuc_faulty
-#     test/test_fanuc_faulty_params.rostest
-#     test/test_faulty_params.cpp
-#   )
-#   target_link_libraries(${PROJECT_NAME}_test_fanuc_faulty
-#     gtest
-#     ${moveit_ros_planning_LIBRARIES}
-#     ${catkin_LIBRARIES}
-#     ${MOVEIT_LIB_NAME}
-#   )
-
-#   add_rostest_gtest(${PROJECT_NAME}_test_kuka_faulty
-#     test/test_kuka_faulty_params.rostest
-#     test/test_faulty_params.cpp
-#   )
-#   target_link_libraries(${PROJECT_NAME}_test_kuka_faulty
-#     gtest
-#     ${moveit_ros_planning_LIBRARIES}
-#     ${catkin_LIBRARIES}
-#     ${MOVEIT_LIB_NAME}
-#   )
-# endif()
-
-ament_package()
+ament_package(CONFIG_EXTRAS ConfigExtras.cmake)
