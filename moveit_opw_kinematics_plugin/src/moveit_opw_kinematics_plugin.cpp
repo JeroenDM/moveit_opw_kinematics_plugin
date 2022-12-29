@@ -518,6 +518,7 @@ namespace moveit_opw_kinematics_plugin {
             opw_parameters_.sign_corrections[i] = static_cast<signed char>(joint_sign_corrections[i]);
         }
 
+        std::cout << "Parameters Set: \n" << opw_parameters_ << std::endl;
         return true;
     }
 
