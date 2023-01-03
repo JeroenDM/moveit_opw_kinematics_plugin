@@ -17,6 +17,7 @@ find_package(pluginlib REQUIRED)
 find_package(moveit_core REQUIRED)
 find_package(moveit_ros_planning REQUIRED)
 find_package(moveit_msgs REQUIRED)
+find_package(opw_kinematics REQUIRED)
 
 # Finds Boost Components
 include(ConfigExtras.cmake)
@@ -29,12 +30,13 @@ set(THIS_PACKAGE_LIBRARIES
         moveit_opw_kinematics_plugin
         )
 
-set(THIS_PACKAGE_INCLUDE_DEPENDS
-        pluginlib
-        moveit_core
-        moveit_ros_planning
-        Boost
-        )
+#set(THIS_PACKAGE_INCLUDE_DEPENDS
+#        pluginlib
+#        moveit_core
+#        moveit_ros_planning
+#        Boost
+#        opw_kinematics
+#        )
 
 pluginlib_export_plugin_description_file(moveit_core moveit_opw_kinematics_plugin_description.xml)
 

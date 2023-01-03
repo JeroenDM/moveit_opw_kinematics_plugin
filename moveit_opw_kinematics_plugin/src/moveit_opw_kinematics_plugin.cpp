@@ -139,10 +139,10 @@ namespace moveit_opw_kinematics_plugin {
     }
 
     bool MoveItOPWKinematicsPlugin::selfTest() {
-        const std::vector<double> joint_angles = {0.1, -0.1, 0.2, -0.3, 0.5, -0.8};
+        const std::array<double, 6> joint_angles = {0.1, -0.1, 0.2, -0.3, 0.5, -0.8};
 
-        auto fk_pose_opw = opw_kinematics::forward(opw_parameters_, &joint_angles[0]);
-        robot_state_->setJointGroupPositions(joint_model_group_, joint_angles);
+        auto fk_pose_opw = opw_kinematics::forward(opw_parameters_, joint_angles);
+        robot_state_->setJointGroupPositions(joint_model_group_, &joint_angles[0]);
         auto fk_pose_moveit = robot_state_->getGlobalLinkTransform(tip_frames_[0]);
         // group/robot might not be at origin, subtract base transform
         auto base = robot_state_->getGlobalLinkTransform(base_frame_);
@@ -415,7 +415,9 @@ namespace moveit_opw_kinematics_plugin {
             return false;
         }
 
-        poses[0] = tf2::toMsg(opw_kinematics::forward(opw_parameters_, &joint_angles[0]));
+        std::array<double, 6> joint_angles_array{};
+        std::copy_n(joint_angles.begin(), 6, joint_angles_array.begin());
+        poses[0] = tf2::toMsg(opw_kinematics::forward(opw_parameters_, joint_angles_array));
         return true;
     };
 
@@ -555,18 +557,18 @@ namespace moveit_opw_kinematics_plugin {
         // Eigen::Isometry3d tool_pose = diff_base.inverse() * pose *
         // tip_frame.inverse();
 
-        std::array<double, 6 * 8> sols;
-        opw_kinematics::inverse(opw_parameters_, pose, sols.data());
+        auto sols = opw_kinematics::inverse(opw_parameters_, pose);
 
         // Check the output
         std::vector<double> tmp(6);  // temporary storage for API reasons
         for (int i = 0; i < 8; i++) {
-            double *sol = sols.data() + 6 * i;
+//            double *sol = sols.data() + 6 * i;
+            auto sol = sols[i];
             if (opw_kinematics::isValid(sol)) {
                 opw_kinematics::harmonizeTowardZero(sol);
 
                 // TODO: make this better...
-                std::copy(sol, sol + 6, tmp.data());
+                std::copy_n(sol.begin(), 6, tmp.data());
                 joint_poses.push_back(tmp);
             }
         }

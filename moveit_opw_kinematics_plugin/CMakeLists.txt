@@ -3,10 +3,12 @@ set(MOVEIT_LIB_NAME moveit_opw_kinematics_plugin)
 add_library(${MOVEIT_LIB_NAME} SHARED
         src/moveit_opw_kinematics_plugin.cpp)
 
+
+
 target_include_directories(${MOVEIT_LIB_NAME}
         PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/opw_kinematics/include>
+#        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/opw_kinematics/include>
         $<INSTALL_INTERFACE:include>)
 
 ament_target_dependencies(
@@ -20,10 +22,16 @@ ament_target_dependencies(
         kdl_parser
         tf2_kdl
         EIGEN3
+        opw_kinematics
 )
 
 target_link_libraries(
         ${MOVEIT_LIB_NAME}
+        opw_kinematics::opw_kinematics
+)
+
+ament_export_libraries(
+        opw_kinematics::opw_kinematics
 )
 
 # prevent pluginlib from using boost
