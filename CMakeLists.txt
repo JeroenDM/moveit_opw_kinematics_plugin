@@ -54,7 +54,14 @@ install(
 )
 
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
-ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS} orocos_kdl_vendor)
+ament_export_dependencies(
+        ${THIS_PACKAGE_INCLUDE_DEPENDS}
+        orocos_kdl_vendor
+        opw_kinematics
+        tf2_kdl
+        kdl_parser
+)
+
 
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
