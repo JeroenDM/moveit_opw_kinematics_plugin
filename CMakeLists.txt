@@ -62,6 +62,10 @@ ament_export_dependencies(
         kdl_parser
 )
 
+ament_export_libraries(
+	opw_kinematics::opw_kinematics
+)
+
 
 if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
