@@ -463,12 +463,14 @@ namespace moveit_opw_kinematics_plugin {
         for (long unsigned int i = 0; i < names.size(); i++) {
             check = lookupParam(node_, "opw_kinematics_geometric_parameters." + names[i], kin_, 1.0);
             if (!check) {
+                check = lookupParam(node_, "manipulator.opw_kinematics_geometric_parameters." + names[i], kin_, 1.0);
                 auto response = getParamsFromNode("/move_group",
                                                   "manipulator.opw_kinematics_geometric_parameters." + names[i]);
                 auto values = response->values;
                 auto type = values[0].integer_value;
                 kin_ = values[type].double_value;
-            }else if (!check){
+            }
+            if (!check){
                 auto response = getParamsFromNode("/move_group",
                                                   "robot_description_kinematics.manipulator.opw_kinematics_geometric_parameters." + names[i]);
                 auto values = response->values;
@@ -487,7 +489,8 @@ namespace moveit_opw_kinematics_plugin {
             auto values = response->values;
             auto type = values[0].integer_value;
             joint_offsets = values[type].double_array_value;
-        }else if (! check) {
+        }
+        if (joint_offsets.size() == 0) {
             auto response = getParamsFromNode("/move_group",
                                               "robot_description_kinematics.manipulator.opw_kinematics_joint_offsets");
             auto values = response->values;
@@ -504,7 +507,8 @@ namespace moveit_opw_kinematics_plugin {
             auto values = response->values;
             auto type = values[0].integer_value;
             joint_sign_corrections = values[type].integer_array_value;
-        }else if (! check) {
+        }
+        if (joint_sign_corrections.size() == 0) {
             auto response = getParamsFromNode("/move_group", "robot_description_kinematics.manipulator.opw_kinematics_joint_sign_corrections");
             auto values = response->values;
             auto type = values[0].integer_value;
