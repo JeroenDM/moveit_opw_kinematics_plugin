@@ -468,6 +468,12 @@ namespace moveit_opw_kinematics_plugin {
                 auto values = response->values;
                 auto type = values[0].integer_value;
                 kin_ = values[type].double_value;
+            }else if (!check){
+                auto response = getParamsFromNode("/move_group",
+                                                  "robot_description_kinematics.manipulator.opw_kinematics_geometric_parameters." + names[i]);
+                auto values = response->values;
+                auto type = values[0].integer_value;
+                kin_ = values[type].double_value;
             }
             opw_kinematics_geometric_parameters.insert({names[i], kin_});
         }
@@ -481,6 +487,12 @@ namespace moveit_opw_kinematics_plugin {
             auto values = response->values;
             auto type = values[0].integer_value;
             joint_offsets = values[type].double_array_value;
+        }else if (! check) {
+            auto response = getParamsFromNode("/move_group",
+                                              "robot_description_kinematics.manipulator.opw_kinematics_joint_offsets");
+            auto values = response->values;
+            auto type = values[0].integer_value;
+            joint_offsets = values[type].double_array_value;
         }
 
         std::vector<int64_t> joint_sign_corrections;
@@ -489,6 +501,11 @@ namespace moveit_opw_kinematics_plugin {
                             std::vector<int64_t>{0, 0, 0, 0, 0, 0});
         if (!check) {
             auto response = getParamsFromNode("/move_group", "manipulator.opw_kinematics_joint_sign_corrections");
+            auto values = response->values;
+            auto type = values[0].integer_value;
+            joint_sign_corrections = values[type].integer_array_value;
+        }else if (! check) {
+            auto response = getParamsFromNode("/move_group", "robot_description_kinematics.manipulator.opw_kinematics_joint_sign_corrections");
             auto values = response->values;
             auto type = values[0].integer_value;
             joint_sign_corrections = values[type].integer_array_value;
