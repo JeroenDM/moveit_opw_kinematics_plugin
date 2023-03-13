@@ -462,20 +462,20 @@ namespace moveit_opw_kinematics_plugin {
         std::vector<std::string> names{"a1", "a2", "b", "c1", "c2", "c3", "c4"};
         for (long unsigned int i = 0; i < names.size(); i++) {
             check = lookupParam(node_, "opw_kinematics_geometric_parameters." + names[i], kin_, 1.0);
+            int type; // we know type should be 3, as that indicates double_value
             if (!check) {
-                check = lookupParam(node_, "manipulator.opw_kinematics_geometric_parameters." + names[i], kin_, 1.0);
                 auto response = getParamsFromNode("/move_group",
                                                   "manipulator.opw_kinematics_geometric_parameters." + names[i]);
                 auto values = response->values;
-                auto type = values[0].integer_value;
-                kin_ = values[type].double_value;
-            }
-            if (!check){
-                auto response = getParamsFromNode("/move_group",
-                                                  "robot_description_kinematics.manipulator.opw_kinematics_geometric_parameters." + names[i]);
-                auto values = response->values;
-                auto type = values[0].integer_value;
-                kin_ = values[type].double_value;
+                type = values[0].type;
+                kin_ = values[0].double_value;
+                if (type == 0){
+                    auto response = getParamsFromNode("/move_group",
+                                                    "robot_description_kinematics.manipulator.opw_kinematics_geometric_parameters." + names[i]);
+                    auto values = response->values;
+                    type = values[0].type;
+                    kin_ = values[0].double_value;
+                }
             }
             opw_kinematics_geometric_parameters.insert({names[i], kin_});
         }
