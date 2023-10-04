@@ -158,7 +158,7 @@ namespace moveit_opw_kinematics_plugin {
     }
 
     bool MoveItOPWKinematicsPlugin::comparePoses(Eigen::Isometry3d &Ta, Eigen::Isometry3d &Tb) {
-        const float TOLERANCE = 1e-6;
+        const float TOLERANCE = 1e-3;
 
         auto Ra = Ta.rotation();
         auto Rb = Tb.rotation();
