@@ -1,46 +1,47 @@
 <?xml version="1.0"?>
-<package format="2">
-  <name>moveit_opw_kinematics_plugin</name>
-  <version>0.2.1</version>
-  <description>
-    <p>
-      MoveIt kinematics plugin for industrial robots.
-    </p>
-    <p>
-      This plugin uses an analytical inverse kinematic library, opw_kinematics,
-      to calculate the inverse kinematics for industrial robots with 6 degrees of freedom,
-      two parallel joints, and a spherical wrist.
-    </p>
-  </description>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>moveit_opw</name>
+  <version>2.5.4</version>
+  <description>Package for opw inverse kinematics solvers in MoveIt</description>
 
-  <maintainer email="jeroen.demaeyer@kuleuven.be">Jeroen De Maeyer</maintainer>
+  <maintainer email="jodle@optimaxsi.com">Jacob Odle</maintainer>
 
-  <license>Apache2.0</license>
+  <license>BSD</license>
 
-  <!-- <url type="website">http://wiki.ros.org/opw_kinematics_plugin</url> -->
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>moveit_common</depend>
 
-  <author>Jeroen De Maeyer</author>
-  <author>Simon Schmeisser (isys vision)</author>
+  <depend>moveit_core</depend>
+  <depend>class_loader</depend>
+  <depend>pluginlib</depend>
+  <depend>eigen</depend>
+  <depend>tf2</depend>
+  <depend>tf2_kdl</depend>
+  <depend>orocos_kdl_vendor</depend>
+  <depend>moveit_msgs</depend>
+  <depend>opw_kinematics</depend>
 
-  <buildtool_depend>cmake_ament</buildtool_depend>
+  <!-- some requirements of ikfast scripts -->
+  <exec_depend>urdfdom</exec_depend> <!-- provides check_urdf -->
+  <exec_depend>python3-lxml</exec_depend>
 
-  <build_depend>eigen_conversions</build_depend>
-  <build_depend>moveit_core</build_depend>
-  <build_depend>roscpp</build_depend>
-  <build_depend>pluginlib</build_depend>
-
-  <build_export_depend>moveit_core</build_export_depend>
-  <build_export_depend>roscpp</build_export_depend>
-
-  <exec_depend>moveit_core</exec_depend>
-  <exec_depend>roscpp</exec_depend>
-  <exec_depend>pluginlib</exec_depend>
-
-  <!-- <test_depend>rostest</test_depend> -->
-  <test_depend>moveit_resources_fanuc_moveit_config</test_depend>
   <test_depend>moveit_ros_planning</test_depend>
+  <test_depend>moveit_resources_fanuc_description</test_depend>
+  <test_depend>moveit_resources_fanuc_moveit_config</test_depend>
+  <test_depend>moveit_resources_panda_description</test_depend>
+  <test_depend>moveit_resources_panda_moveit_config</test_depend>
+
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+  <test_depend>ros_testing</test_depend>
+  <test_depend>moveit_configs_utils</test_depend>
+  <test_depend>launch_param_builder</test_depend>
 
   <export>
-    <moveit_core plugin="${prefix}/moveit_opw_kinematics_plugin_description.xml"/>
+    <build_type>ament_cmake</build_type>
+    <moveit_core plugin="${prefix}/moveit_opw_kinematics_plugin.xml"/>
   </export>
+
 </package>
